@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#9BC7D6"> <!-- Set background color here -->
+
+   <!-- Static top part (30% of the screen) -->
+   <LinearLayout
+       android:id="@+id/top_part"
+       android:layout_width="match_parent"
+       android:layout_height="0dp"
+       android:layout_weight="2"
+       android:orientation="vertical">
+
+      <TextView
+          android:id = "@+id/ExploreText"
+          android:layout_width = "wrap_content"
+          android:layout_height = "40dp"
+          android:layout_gravity = "center"
+          android:textColor = "@color/black"
+          android:gravity = "center"
+          android:text="Explore"
+          android:textSize = "24dp" />
+
+      <View
+          android:id="@+id/white_line"
+          android:layout_width="match_parent"
+          android:layout_height="2dp"
+          android:background="@android:color/white" />
+
+      <TextView
+          android:id = "@+id/DailyStreak"
+          android:layout_width = "wrap_content"
+          android:layout_height = "25dp"
+          android:layout_gravity = "start"
+          android:textColor = "@color/black"
+          android:gravity = "center"
+          android:text="@string/daily_streak_5_ud83d_udd25"
+          android:textSize = "20sp" />
+
+      <TextView
+          android:id = "@+id/MainPageTitle"
+          android:layout_width = "wrap_content"
+          android:layout_height = "30dp"
+          android:layout_gravity = "left"
+          android:layout_marginTop="25dp"
+          android:textColor = "@color/black"
+          android:gravity = "center"
+          android:text="Latest confirmed workouts in your Area:"
+          android:textSize = "22sp"
+          tools:ignore="HardcodedText" />
+
+   </LinearLayout>
+
+      <!-- Add your static content here -->
+
+   <!-- Scrollable lower part (70% of the screen) -->
+   <ScrollView
+       android:layout_width="match_parent"
+       android:layout_height="43dp"
+       android:layout_weight="7">
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="0dp"
+          android:orientation="vertical">
+         <!-- Add your buttons here -->
+         <Button
+             android:layout_gravity="center"
+             android:layout_width="350dp"
+             android:layout_height="160dp"
+             android:layout_marginBottom="20dp"
+             android:backgroundTint ="#D9D9D9"
+             android:text="@string/button_1" />
+
+         <Button
+             android:layout_width="350dp"
+             android:layout_height="160dp"
+             android:layout_gravity="center"
+             android:layout_marginBottom="20dp"
+             android:backgroundTint ="#D9D9D9"
+             android:text="@string/button_2" />
+
+         <Button
+             android:layout_gravity="center"
+             android:layout_width="350dp"
+             android:layout_height="160dp"
+             android:layout_marginBottom="20dp"
+             android:backgroundTint ="#D9D9D9"
+             android:text="@string/button_3" />
+         <Button
+             android:layout_gravity="center"
+             android:layout_width="350dp"
+             android:layout_height="160dp"
+             android:layout_marginBottom="20dp"
+             android:backgroundTint ="#D9D9D9"
+             android:text="@string/button_3" />
+         <Button
+             android:layout_gravity="center"
+             android:layout_width="350dp"
+             android:layout_height="160dp"
+             android:layout_marginBottom="20dp"
+             android:backgroundTint ="#D9D9D9"
+             android:text="@string/button_3" />
+         <Button
+             android:layout_gravity="center"
+             android:layout_width="350dp"
+             android:layout_height="160dp"
+             android:layout_marginBottom="20dp"
+             android:backgroundTint ="#D9D9D9"
+             android:text="@string/button_3" />
+         <!-- Add more buttons as needed -->
+      </LinearLayout>
+    </ScrollView>
+   <LinearLayout
+       android:id="@+id/buttom_part"
+       android:layout_width="match_parent"
+       android:layout_height="0dp"
+       android:layout_weight="0.9"
+       android:orientation="horizontal"
+       android:background="#D9D9D9"> <!-- Set background color here -->
+
+      <ImageButton
+          android:id = "@+id/personal"
+          android:layout_width="80sp"
+          android:layout_height="70sp"
+          android:background="@drawable/personal"
+          android:layout_marginStart="15sp"
+          />
+
+
+      <ImageButton
+          android:id = "@+id/createWorkout"
+          android:layout_width="80sp"
+          android:layout_height="70sp"
+          android:background="@drawable/add"
+          android:layout_marginStart="15sp"
+          />
+
+      <ImageButton
+          android:id = "@+id/scoreboard"
+          android:layout_width="80sp"
+          android:layout_height="70sp"
+          android:background="@drawable/scoreboard"
+          android:layout_marginStart="15sp"
+          />
+
+      <ImageButton
+          android:id = "@+id/homepage"
+          android:layout_width="80sp"
+          android:layout_height="70sp"
+          android:background="@drawable/dumble"
+          android:layout_marginStart="15sp"
+          />
+   </LinearLayout>
+
+</LinearLayout>
