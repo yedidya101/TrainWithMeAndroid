@@ -39,7 +39,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingStart="15sp"
-
                 android:paddingEnd="20sp"
                 android:paddingBottom="20sp">
 
@@ -111,6 +110,7 @@
 
             <EditText
                 android:id="@+id/setPassword"
+                android:inputType="textPassword"
                 android:layout_width="390sp"
                 android:layout_height="55sp"
                 android:layout_marginStart="15sp"
@@ -125,6 +125,7 @@
 
             <EditText
                 android:id="@+id/ConfirmPassword"
+                android:inputType="textPassword"
                 android:layout_width="390sp"
                 android:layout_height="55sp"
                 android:layout_marginStart="15sp"
@@ -138,19 +139,40 @@
 
 
             <!-- Login Button -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="68sp"
+                android:orientation="horizontal"
+                android:paddingStart="15sp"
+                android:paddingEnd="20sp"
+                android:paddingBottom="20sp">
 
-            <Button
-                android:id="@+id/bthBirthDate"
-                android:layout_width="200sp"
-                android:layout_height="55dp"
-                android:layout_gravity="left"
-                android:layout_marginStart="15sp"
-                android:layout_marginTop="20sp"
-                android:background="@android:drawable/editbox_dropdown_dark_frame"
-                android:text="@string/birthdate"
-                android:textSize="20sp"
-                android:textColor="#F8F0F0"
-                tools:ignore="RtlHardcoded" />
+                <Button
+                    android:id="@+id/bthBirthDate"
+                    android:layout_width="200sp"
+                    android:layout_height="55dp"
+                    android:layout_gravity="left"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginTop="20sp"
+                    android:background="@android:drawable/editbox_dropdown_dark_frame"
+                    android:onClick="showDatePickerDialog"
+                    android:text="@string/birthdate"
+                    android:textColor="#F8F0F0"
+                    android:textSize="20sp"
+                    tools:ignore="RtlHardcoded" />
+
+                <TextView
+                    android:id="@+id/chosenDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="@string/_01_20_2000"
+                    android:layout_marginEnd="80sp"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/termsAndConditions"
@@ -163,6 +185,7 @@
                 android:layout_marginEnd="10sp"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
+
 
 
             <Button
