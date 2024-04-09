@@ -25,7 +25,7 @@
                 android:layout_gravity="right"
                 android:gravity="center"
                 android:text="Pick Your Gender"
-                android:paddingTop="200sp"
+                android:paddingTop="100sp"
                 android:layout_marginEnd="10sp"
                 android:textColor="@color/white"
                 android:textSize="20sp"
@@ -97,7 +97,7 @@
 
             <EditText
                 android:id="@+id/EmailRegister"
-                android:layout_width="390sp"
+                android:layout_width="370sp"
                 android:layout_height="55sp"
                 android:layout_marginStart="15sp"
                 android:layout_marginTop="3sp"
@@ -108,34 +108,46 @@
                 android:paddingStart="20sp"
                 android:textSize="30sp" />
 
-            <EditText
-                android:id="@+id/setPassword"
-                android:inputType="textPassword"
-                android:layout_width="390sp"
-                android:layout_height="55sp"
-                android:layout_marginStart="15sp"
-                android:layout_marginTop="3sp"
-                android:layout_marginEnd="20sp"
-                android:layout_marginBottom="20sp"
-                android:background="@android:drawable/editbox_background_normal"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/SetPasswordText"
+                android:layout_width="370sp"
+                android:layout_height="65sp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="20dp"
                 android:hint="Password"
-                android:paddingStart="20sp"
-                android:textSize="30sp" />
+                app:passwordToggleEnabled="true">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/setPassword"
+                    android:layout_width="370sp"
+                    android:layout_height="65sp"
+                    android:layout_marginStart="8sp"
+                    android:textSize="30sp"
+                    android:background="@android:drawable/editbox_background_normal"
+                    android:inputType="textPassword" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
 
-            <EditText
-                android:id="@+id/ConfirmPassword"
-                android:inputType="textPassword"
-                android:layout_width="390sp"
-                android:layout_height="55sp"
-                android:layout_marginStart="15sp"
-                android:layout_marginTop="3sp"
-                android:layout_marginEnd="20sp"
-                android:layout_marginBottom="20sp"
-                android:background="@android:drawable/editbox_background_normal"
-                android:hint="@string/confirm_password"
-                android:paddingStart="20sp"
-                android:textSize="30sp" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textPassword"
+                android:layout_width="370sp"
+                android:layout_height="65sp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="20dp"
+                android:hint="Confirm Password"
+                app:passwordToggleEnabled="true">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/ConfirmPassword"
+                    android:layout_width="370sp"
+                    android:layout_height="65sp"
+                    android:textSize="30sp"
+                    android:layout_marginStart="8sp"
+                    android:background="@android:drawable/editbox_background_normal"
+                    android:inputType="textPassword" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
 
             <!-- Login Button -->
@@ -168,7 +180,7 @@
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:text="@string/_01_20_2000"
-                    android:layout_marginEnd="80sp"
+
                     android:textColor="@color/white"
                     android:textSize="14sp" />
 
@@ -181,7 +193,7 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:text="@string/by_joining_you_agree_to_the_terms_and_conditions_and_confirm_that_you_have_read_and_understand_the_privacy_policy"
-                android:paddingTop="40sp"
+                android:paddingTop="10sp"
                 android:layout_marginEnd="10sp"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
@@ -204,8 +216,18 @@
                 />
 
 
-
-            <!-- Sign Up TextView -->
+            <TextView
+                android:id="@+id/Back4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="left"
+                android:layout_marginBottom="5dp"
+                android:paddingLeft="15dp"
+                android:text="Back"
+                android:textColor="@color/white"
+                android:textSize="25sp"
+                tools:ignore="RtlHardcoded" />
 
 
         </LinearLayout>

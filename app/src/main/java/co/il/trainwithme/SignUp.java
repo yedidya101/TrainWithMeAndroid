@@ -11,7 +11,7 @@ import android.widget.DatePicker;
 import android.app.DatePickerDialog;
 import java.util.Calendar;
 public class SignUp extends AppCompatActivity implements View.OnClickListener {
-    private TextView  chosenDate;
+    private TextView  chosenDate, Back4;
     private Calendar selectedDate;
     private Button btnSignUp;
     @Override
@@ -21,8 +21,9 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
 
         chosenDate = findViewById(R.id.chosenDate);
         btnSignUp = findViewById(R.id.btnSignUp);
+        Back4 = findViewById(R.id.Back4);
 
-
+        Back4.setOnClickListener(this);
         btnSignUp.setOnClickListener(this);
     }
 
@@ -31,6 +32,11 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         if(v == btnSignUp)
         {
             Intent loginintent = new Intent(SignUp.this, HomePage.class);
+            startActivity(loginintent);
+        }
+        if(v == Back4)
+        {
+            Intent loginintent = new Intent(SignUp.this, MainActivity.class);
             startActivity(loginintent);
         }
     }
