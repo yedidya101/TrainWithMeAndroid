@@ -10,30 +10,30 @@
    <LinearLayout
        android:id="@+id/top_part"
        android:layout_width="match_parent"
-       android:layout_height="0dp"
+       android:layout_height="0sp"
        android:layout_weight="2"
        android:orientation="vertical">
 
       <TextView
           android:id = "@+id/ExploreText"
           android:layout_width = "wrap_content"
-          android:layout_height = "40dp"
+          android:layout_height = "40sp"
           android:layout_gravity = "center"
           android:textColor = "@color/black"
           android:gravity = "center"
           android:text="Explore"
-          android:textSize = "24dp" />
+          android:textSize = "24sp" />
 
       <View
           android:id="@+id/white_line"
           android:layout_width="match_parent"
-          android:layout_height="2dp"
+          android:layout_height="2sp"
           android:background="@android:color/white" />
 
       <TextView
           android:id = "@+id/DailyStreak"
           android:layout_width = "wrap_content"
-          android:layout_height = "25dp"
+          android:layout_height = "25sp"
           android:layout_gravity = "start"
           android:textColor = "@color/black"
           android:gravity = "center"
@@ -43,9 +43,9 @@
       <TextView
           android:id = "@+id/MainPageTitle"
           android:layout_width = "wrap_content"
-          android:layout_height = "30dp"
+          android:layout_height = "30sp"
           android:layout_gravity = "left"
-          android:layout_marginTop="25dp"
+          android:layout_marginTop="25sp"
           android:textColor = "@color/black"
           android:gravity = "center"
           android:text="Latest confirmed workouts in your Area:"
@@ -59,55 +59,55 @@
    <!-- Scrollable lower part (70% of the screen) -->
    <ScrollView
        android:layout_width="match_parent"
-       android:layout_height="43dp"
+       android:layout_height="43sp"
        android:layout_weight="7">
       <LinearLayout
           android:layout_width="match_parent"
-          android:layout_height="0dp"
+          android:layout_height="0sp"
           android:orientation="vertical">
          <!-- Add your buttons here -->
          <Button
              android:layout_gravity="center"
-             android:layout_width="350dp"
-             android:layout_height="160dp"
-             android:layout_marginBottom="20dp"
+             android:layout_width="350sp"
+             android:layout_height="160sp"
+             android:layout_marginBottom="20sp"
              android:backgroundTint ="#D9D9D9"
              android:text="@string/button_1" />
 
          <Button
-             android:layout_width="350dp"
-             android:layout_height="160dp"
+             android:layout_width="350sp"
+             android:layout_height="160sp"
              android:layout_gravity="center"
-             android:layout_marginBottom="20dp"
+             android:layout_marginBottom="20sp"
              android:backgroundTint ="#D9D9D9"
              android:text="@string/button_2" />
 
          <Button
              android:layout_gravity="center"
-             android:layout_width="350dp"
-             android:layout_height="160dp"
-             android:layout_marginBottom="20dp"
+             android:layout_width="350sp"
+             android:layout_height="160sp"
+             android:layout_marginBottom="20sp"
              android:backgroundTint ="#D9D9D9"
              android:text="@string/button_3" />
          <Button
              android:layout_gravity="center"
-             android:layout_width="350dp"
-             android:layout_height="160dp"
-             android:layout_marginBottom="20dp"
+             android:layout_width="350sp"
+             android:layout_height="160sp"
+             android:layout_marginBottom="20sp"
              android:backgroundTint ="#D9D9D9"
              android:text="@string/button_3" />
          <Button
              android:layout_gravity="center"
-             android:layout_width="350dp"
-             android:layout_height="160dp"
-             android:layout_marginBottom="20dp"
+             android:layout_width="350sp"
+             android:layout_height="160sp"
+             android:layout_marginBottom="20sp"
              android:backgroundTint ="#D9D9D9"
              android:text="@string/button_3" />
          <Button
              android:layout_gravity="center"
-             android:layout_width="350dp"
-             android:layout_height="160dp"
-             android:layout_marginBottom="20dp"
+             android:layout_width="350sp"
+             android:layout_height="160sp"
+             android:layout_marginBottom="20sp"
              android:backgroundTint ="#D9D9D9"
              android:text="@string/button_3" />
          <!-- Add more buttons as needed -->
@@ -116,7 +116,7 @@
    <LinearLayout
        android:id="@+id/buttom_part"
        android:layout_width="match_parent"
-       android:layout_height="0dp"
+       android:layout_height="0sp"
        android:layout_weight="0.9"
        android:orientation="horizontal"
        android:background="#D9D9D9"> <!-- Set background color here -->
