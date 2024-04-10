@@ -10,15 +10,27 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.net.*;
 import java.io.*;
+import java.util.HashMap; // import the HashMap class
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     TextView ForgotPassword, SignUpText, SignUplink;
     EditText etusername, etpassword;
     Button btnLogin;
     String Password, username;
-        //Socket clientSocket = new Socket("loaclhost", 5555);
+    Socket sock;
+    PrintWriter printWriter;
+    int port = 5555;
+    String ip = "localhost";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,17 +60,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         if(v == btnLogin)
         {
-            if(etusername.getText().toString().length() > 0 && etpassword.getText().toString().length() > 0) {
-                //try {
-                    //PrintWriter pr = new PrintWriter(clientSocket.getOutputStream());
-
-                //}
-
+            if(etusername.getText().toString().length() > 0 && etpassword.getText().toString().length() > 0) { //check if username and password are not empty
                 Password = etpassword.getText().toString();
                 username = etusername.getText().toString();
                 etusername.setText("");
                 etpassword.setText("");
+                String userInfo = username + "," + Password;
+                HashMap<String, String> clientdic = new HashMap<String, String>(); //create a dictionary to send to server
+                clientdic.put("name", username);
+                clientdic.put("opcode", "2");
+                clientdic.put("msg", userInfo);
+                JSONObject jsonObject = new JSONObject(clientdic); // convert dictionary to json object for sending to server
+                try {
+                    sock = new Socket(ip, port);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    PrintWriter pr = new PrintWriter(sock.getOutputStream());
+                    pr.println(jsonObject);
+                    pr.flush(); // sending massages to server
 
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                try{
+                    InputStream inputStream = sock.getInputStream();
+                    BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+                    String data = br.readLine();
+                    System.out.println(data);
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 // redirect to home page.
                 Intent loginintent = new Intent(MainActivity.this, HomePage.class);
                 startActivity(loginintent);
@@ -77,4 +112,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(SignUpintent);
         }
     }
+
+    private boolean isJSONValid(String test) {
+        try {
+            new JSONObject(test);
+        } catch (JSONException e) {
+            try {
+                new JSONArray(test);
+            }
+            catch (JSONException ex) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
+
+
+
