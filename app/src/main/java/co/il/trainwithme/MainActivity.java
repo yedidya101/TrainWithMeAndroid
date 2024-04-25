@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     PrintWriter printWriter;
     int port = 5555;
     String ip = "localhost";
-
+    boolean FirstConnection = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,15 +66,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 etusername.setText("");
                 etpassword.setText("");
                 String userInfo = username + "," + Password;
-                HashMap<String, String> clientdic = new HashMap<String, String>(); //create a dictionary to send to server
-                clientdic.put("name", username);
-                clientdic.put("opcode", "2");
-                clientdic.put("msg", userInfo);
-                JSONObject jsonObject = new JSONObject(clientdic); // convert dictionary to json object for sending to server
+
+                JSONObject jsonObject = new JSONObject(); // convert dictionary to json object for sending to serverr
+                try {
+                    jsonObject.put("name", username);
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    jsonObject.put("opcode", "2");
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    jsonObject.put("msg", userInfo);
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+
                 try {
                     sock = new Socket(ip, port);
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
+                    // Handle the exception here (e.g., show an error message);
+                }
+
+                if (FirstConnection) {
+                    try {
+                        PrintWriter pr = new PrintWriter(sock.getOutputStream());
+                        pr.println(username);
+                        pr.flush(); // sending massages to server
+                        FirstConnection = false;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
                 }
                 try {
                     PrintWriter pr = new PrintWriter(sock.getOutputStream());
@@ -94,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+
                 // redirect to home page.
                 Intent loginintent = new Intent(MainActivity.this, HomePage.class);
                 startActivity(loginintent);
