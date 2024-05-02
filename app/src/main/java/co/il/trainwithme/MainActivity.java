@@ -1,7 +1,5 @@
 package co.il.trainwithme;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.graphics.Paint;
 import android.os.Bundle;
@@ -11,13 +9,19 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.*;
-import java.io.*;
-import java.util.HashMap; // import the HashMap class
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -28,7 +32,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Socket sock;
     PrintWriter printWriter;
     int port = 5555;
-    String ip = "localhost";
+    String ip = "3.75.158.163";
     boolean FirstConnection = true;
 
     @Override
@@ -65,69 +69,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 username = etusername.getText().toString();
                 etusername.setText("");
                 etpassword.setText("");
+                String opcode = "2";
                 String userInfo = username + "," + Password;
 
-                JSONObject jsonObject = new JSONObject(); // convert dictionary to json object for sending to serverr
-                try {
-                    jsonObject.put("name", username);
-                } catch (JSONException e) {
-                    throw new RuntimeException(e);
-                }
-                try {
-                    jsonObject.put("opcode", "2");
-                } catch (JSONException e) {
-                    throw new RuntimeException(e);
-                }
-                try {
-                    jsonObject.put("msg", userInfo);
-                } catch (JSONException e) {
-                    throw new RuntimeException(e);
-                }
+
+
+                org.json.simple.JSONObject jsonObject = new org.json.simple.JSONObject(); // convert dictionary to json object for sending to server
+                jsonObject.put("name", username);
+                jsonObject.put("opcode", opcode);
+                jsonObject.put("msg", userInfo);
+
 
                 try {
-                    sock = new Socket(ip, port);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // Handle the exception here (e.g., show an error message);
-                }
-
-                if (FirstConnection) {
-                    try {
-                        PrintWriter pr = new PrintWriter(sock.getOutputStream());
-                        pr.println(username);
-                        pr.flush(); // sending massages to server
-                        FirstConnection = false;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    if (sock == null) {
+                        sock = new Socket(ip, port);
                     }
 
-                }
-                try {
+                    DataOutputStream outToServer = new DataOutputStream(sock.getOutputStream());
+                    if (FirstConnection) {
+                        outToServer.writeBytes( "Fuck\n");
+                        // Receive response from the server
+                        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+                        String response = inFromServer.readLine();
+                        FirstConnection = false;
+                    }
                     PrintWriter pr = new PrintWriter(sock.getOutputStream());
                     pr.println(jsonObject);
                     pr.flush(); // sending massages to server
 
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
 
-                try{
                     InputStream inputStream = sock.getInputStream();
                     BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
                     String data = br.readLine();
                     System.out.println(data);
 
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                    // redirect to home page.
+                    Intent loginintent = new Intent(MainActivity.this, HomePage.class);
+                    startActivity(loginintent);
 
-                // redirect to home page.
-                Intent loginintent = new Intent(MainActivity.this, HomePage.class);
-                startActivity(loginintent);
+                } catch(IOException e) {
+                    Intent loginintent = new Intent(MainActivity.this, HomePage.class);
+                    startActivity(loginintent);
+                }
             }
             else
             {
-                Toast.makeText(this,"The UserName or The Password Is Incorrect.",Toast.LENGTH_LONG).show();
+                Toast.makeText(this,"Incorrect Username or Password.",Toast.LENGTH_LONG).show();
             }
         }
         if(v == ForgotPassword){
@@ -135,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(Forgotpassintent);
         }
         if(v == SignUplink){
+
             Intent SignUpintent = new Intent(MainActivity.this, SignUp.class);
             startActivity(SignUpintent);
         }
