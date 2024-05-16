@@ -9,18 +9,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private FirebaseAuth mAuth;
+    //private FirebaseAuth mAuth;
     TextView ForgotPassword, SignUpText, SignUplink;
     EditText etusername, etpassword;
     Button btnLogin;
@@ -52,22 +45,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ForgotPassword.setOnClickListener(this); //listen to forgot password text to get recovery email
         SignUplink.setOnClickListener(this); //listen to sign up text to move to sign up page
 
-        mAuth = FirebaseAuth.getInstance();
+        /*mAuth = FirebaseAuth.getInstance();
         if(mAuth.getCurrentUser() != null)
         {
             Intent loginintent = new Intent(MainActivity.this, HomePage.class);
             startActivity(loginintent);
             finish();
         }
-
+*/
     }
 
-    @Override
+    /*@Override
     public void onStart() {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
-    }
+    } */
     @Override
     public void onClick(View v) {
         if(v == btnLogin)
@@ -78,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 etusername.setText("");
                 etpassword.setText("");
 
-                mAuth.signInWithEmailAndPassword(username, Password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+               /* mAuth.signInWithEmailAndPassword(username, Password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
@@ -93,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
                 // redirect to home page.
-
+*/
             }
             else
             {
