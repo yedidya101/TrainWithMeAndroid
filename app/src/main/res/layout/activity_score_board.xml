@@ -26,7 +26,7 @@
         <TableRow>
 
             <TextView
-                android:layout_width="139dp"
+                android:layout_width="139sp"
                 android:layout_height="wrap_content"
                 android:text="place"
                 android:textColor="@color/black"

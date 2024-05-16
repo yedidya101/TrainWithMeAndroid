@@ -113,7 +113,7 @@
                 android:layout_width="370sp"
                 android:layout_height="65sp"
                 android:layout_gravity="center"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="20sp"
                 android:hint="Password"
                 app:passwordToggleEnabled="true">
 
@@ -134,7 +134,7 @@
                 android:layout_width="370sp"
                 android:layout_height="65sp"
                 android:layout_gravity="center"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="20sp"
                 android:hint="Confirm Password"
                 app:passwordToggleEnabled="true">
 
@@ -162,7 +162,7 @@
                 <Button
                     android:id="@+id/bthBirthDate"
                     android:layout_width="200sp"
-                    android:layout_height="55dp"
+                    android:layout_height="55sp"
                     android:layout_gravity="left"
                     android:layout_marginStart="15sp"
                     android:layout_marginTop="20sp"
@@ -203,7 +203,7 @@
             <Button
                 android:id="@+id/btnSignUp"
                 android:layout_width="350sp"
-                android:layout_height="55dp"
+                android:layout_height="55sp"
                 android:layout_gravity="center"
                 android:layout_marginTop="6sp"
                 android:layout_marginBottom="20sp"
@@ -222,8 +222,8 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:layout_gravity="left"
-                android:layout_marginBottom="5dp"
-                android:paddingLeft="15dp"
+                android:layout_marginBottom="5sp"
+                android:paddingLeft="15sp"
                 android:text="Back"
                 android:textColor="@color/white"
                 android:textSize="25sp"
