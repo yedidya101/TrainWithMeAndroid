@@ -1,235 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/back1"
-    android:orientation="vertical"
     tools:context=".SignUp">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0sp"
-        android:layout_weight="20">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="50sp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0sp"
-            android:orientation="vertical">
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/firstNameLayout"
+            android:layout_width="310sp"
+            android:layout_height="65sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="50sp"
+            android:layout_marginBottom="20sp"
+            android:hint="First Name">
 
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="right"
-                android:gravity="center"
-                android:text="Pick Your Gender"
-                android:paddingTop="100sp"
-                android:layout_marginEnd="10sp"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                tools:ignore="RtlHardcoded" />
-
-
-
-            <!-- RadioGroup and EditText in a horizontal LinearLayout -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingStart="15sp"
-                android:paddingEnd="20sp"
-                android:paddingBottom="20sp">
-
-                <!-- EditText for First Name -->
-                <EditText
-                    android:id="@+id/FirstName"
-                    android:layout_width="200sp"
-                    android:layout_height="55sp"
-                    android:layout_weight="1"
-                    android:background="@android:drawable/editbox_background_normal"
-                    android:hint="@string/first_name"
-                    android:paddingStart="20sp"
-                    android:textSize="30sp" />
-
-                <!-- RadioGroup for gender selection -->
-                <RadioGroup
-                    android:id="@+id/radioGroupGender"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10sp"
-                    android:layout_marginStart="15sp"
-                    android:background="@color/white"
-                    android:orientation="horizontal">
-
-                    <RadioButton
-                        android:id="@+id/radioButtonMale"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="18sp"
-                        android:text="Male"
-                        android:checked="true" />
-
-                    <RadioButton
-                        android:id="@+id/radioButtonFemale"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="18sp"
-                        android:text="Female" />
-                </RadioGroup>
-            </LinearLayout>
-
-            <!-- Last Name EditText -->
-            <EditText
-                android:id="@+id/lastName"
-                android:layout_width="200sp"
-                android:layout_height="55sp"
-                android:layout_marginStart="15sp"
-                android:layout_marginTop="3sp"
-                android:layout_marginEnd="20sp"
-                android:layout_marginBottom="20sp"
-                android:background="@android:drawable/editbox_background_normal"
-                android:hint="Last Name"
-                android:paddingStart="20sp"
-                android:textSize="30sp" />
-
-
-            <EditText
-                android:id="@+id/EmailRegister"
-                android:layout_width="370sp"
-                android:layout_height="55sp"
-                android:layout_marginStart="15sp"
-                android:layout_marginTop="3sp"
-                android:layout_marginEnd="20sp"
-                android:layout_marginBottom="20sp"
-                android:background="@android:drawable/editbox_background_normal"
-                android:hint="Email"
-                android:paddingStart="20sp"
-                android:textSize="30sp" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/SetPasswordText"
-                android:layout_width="370sp"
-                android:layout_height="65sp"
-                android:layout_gravity="center"
-                android:layout_marginBottom="20sp"
-                android:hint="Password"
-                app:passwordToggleEnabled="true">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/setPassword"
-                    android:layout_width="370sp"
-                    android:layout_height="65sp"
-                    android:layout_marginStart="8sp"
-                    android:textSize="30sp"
-                    android:background="@android:drawable/editbox_background_normal"
-                    android:inputType="textPassword" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textPassword"
-                android:layout_width="370sp"
-                android:layout_height="65sp"
-                android:layout_gravity="center"
-                android:layout_marginBottom="20sp"
-                android:hint="Confirm Password"
-                app:passwordToggleEnabled="true">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/ConfirmPassword"
-                    android:layout_width="370sp"
-                    android:layout_height="65sp"
-                    android:textSize="30sp"
-                    android:layout_marginStart="8sp"
-                    android:background="@android:drawable/editbox_background_normal"
-                    android:inputType="textPassword" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-
-            <!-- Login Button -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="68sp"
-                android:orientation="horizontal"
-                android:paddingStart="15sp"
-                android:paddingEnd="20sp"
-                android:paddingBottom="20sp">
-
-                <Button
-                    android:id="@+id/bthBirthDate"
-                    android:layout_width="200sp"
-                    android:layout_height="55sp"
-                    android:layout_gravity="left"
-                    android:layout_marginStart="15sp"
-                    android:layout_marginTop="20sp"
-                    android:background="@android:drawable/editbox_dropdown_dark_frame"
-                    android:onClick="showDatePickerDialog"
-                    android:text="@string/birthdate"
-                    android:textColor="#F8F0F0"
-                    android:textSize="20sp"
-                    tools:ignore="RtlHardcoded" />
-
-                <TextView
-                    android:id="@+id/chosenDate"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="@string/_01_20_2000"
-
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/termsAndConditions"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/FirstName"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="@string/by_joining_you_agree_to_the_terms_and_conditions_and_confirm_that_you_have_read_and_understand_the_privacy_policy"
-                android:paddingTop="10sp"
-                android:layout_marginEnd="10sp"
-                android:textColor="@color/white"
-                android:textSize="14sp" />
+                android:paddingLeft="20sp"
+                android:textSize="30sp"
+                android:background="@android:drawable/editbox_background_normal" />
+        </com.google.android.material.textfield.TextInputLayout>
 
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/lastNameLayout"
+            android:layout_width="310sp"
+            android:layout_height="65sp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="20sp"
+            android:hint="Last Name">
 
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/lastName"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingLeft="20sp"
+                android:textSize="30sp"
+                android:background="@android:drawable/editbox_background_normal" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/btnSignUp"
-                android:layout_width="350sp"
-                android:layout_height="55sp"
-                android:layout_gravity="center"
-                android:layout_marginTop="6sp"
-                android:layout_marginBottom="20sp"
-                android:background="@android:drawable/editbox_dropdown_dark_frame"
-                android:backgroundTint="#0C1538"
-                android:text="@string/join"
-                android:textSize="20sp"
-                android:textColor="#F8F0F0"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/emailLayout"
+            android:layout_width="310sp"
+            android:layout_height="65sp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="20sp"
+            android:hint="Email">
 
-                />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/EmailRegister"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingLeft="20sp"
+                android:textSize="30sp"
+                android:background="@android:drawable/editbox_background_normal" />
+        </com.google.android.material.textfield.TextInputLayout>
 
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/passwordLayout"
+            android:layout_width="310sp"
+            android:layout_height="65sp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="20sp"
+            android:hint="Password"
+            app:passwordToggleEnabled="true">
 
-            <TextView
-                android:id="@+id/Back4"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/SetPasswordText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="30sp"
+                android:background="@android:drawable/editbox_background_normal"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/confirmPasswordLayout"
+            android:layout_width="310sp"
+            android:layout_height="65sp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="20sp"
+            android:hint="Confirm Password"
+            app:passwordToggleEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/ConfirmPasswordText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="30sp"
+                android:background="@android:drawable/editbox_background_normal"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/chosenDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="Choose Date"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:layout_marginTop="10sp"
+            android:onClick="showDatePickerDialog" />
+
+        <RadioGroup
+            android:id="@+id/radioGroupGender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:layout_marginTop="20sp"
+            android:layout_marginBottom="20sp">
+
+            <RadioButton
+                android:id="@+id/radioButtonMale"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:layout_gravity="left"
-                android:layout_marginBottom="5sp"
-                android:paddingLeft="15sp"
-                android:text="Back"
+                android:text="Male"
+                android:textColor="@color/white" />
+
+            <RadioButton
+                android:id="@+id/radioButtonFemale"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Female"
                 android:textColor="@color/white"
-                android:textSize="25sp"
-                tools:ignore="RtlHardcoded" />
+                android:layout_marginStart="20sp" />
+        </RadioGroup>
 
+        <TextView
+            android:id="@+id/agreementText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="By joining, you agree to the Terms and Conditions and confirm that you have read and understand the Privacy Policy."
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:layout_marginTop="20sp"
+            android:layout_marginBottom="20sp"
+            android:textAlignment="center"
+            android:paddingStart="20sp"
+            android:paddingEnd="20sp" />
 
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+        <Button
+            android:id="@+id/btnSignUp"
+            android:textColor="#F8F0F0"
+            android:layout_width="160sp"
+            android:backgroundTint="#0C1538"
+            android:layout_height="60sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20sp"
+            android:layout_marginEnd="5sp"
+            android:layout_marginBottom="20sp"
+            android:background="@android:drawable/editbox_dropdown_dark_frame"
+            android:text="Join" />
+
+        <TextView
+            android:id="@+id/Back4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="Back"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:layout_marginTop="10sp" />
+
+    </LinearLayout>
+</ScrollView>
