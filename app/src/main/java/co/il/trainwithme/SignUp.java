@@ -2,12 +2,15 @@ package co.il.trainwithme;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,12 +19,18 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignUp extends AppCompatActivity implements View.OnClickListener {
     private TextView chosenDate, Back4, agreementText;
@@ -29,8 +38,10 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
     private Button btnSignUp;
     private EditText mFirstName, mLastName, mEmail, mPassword, mConfirmPassword;
     private RadioGroup radioGroupGender;
+    private RadioButton radioButton;
     private FirebaseAuth fAuth;
-
+    private String gender, userID;
+    private FirebaseFirestore fstore;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +51,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         btnSignUp = findViewById(R.id.btnSignUp);
         Back4 = findViewById(R.id.Back4);
         agreementText = findViewById(R.id.agreementText);
+        radioGroupGender = findViewById(R.id.radioGroupGender);
 
         // Initialize TextInputLayout
         TextInputLayout firstNameLayout = findViewById(R.id.firstNameLayout);
@@ -55,13 +67,14 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         mPassword = passwordLayout.getEditText();
         mConfirmPassword = confirmPasswordLayout.getEditText();
 
-        radioGroupGender = findViewById(R.id.radioGroupGender);
+        agreementText.setPaintFlags(agreementText.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
 
         Back4.setOnClickListener(this);
         btnSignUp.setOnClickListener(this);
         chosenDate.setOnClickListener(this);
 
         fAuth = FirebaseAuth.getInstance();
+        fstore = FirebaseFirestore.getInstance();
         /*if (fAuth.getCurrentUser() != null) {
             Intent loginIntent = new Intent(SignUp.this, HomePage.class);
             startActivity(loginIntent);
@@ -84,8 +97,19 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         String email = mEmail.getText().toString().trim();
         String password = mPassword.getText().toString().trim();
         String confirmPassword = mConfirmPassword.getText().toString().trim();
-        String firstName = mFirstName.getText().toString().trim();
-        String lastName = mLastName.getText().toString().trim();
+        String firstName = mFirstName.getText().toString();
+        String lastName = mLastName.getText().toString();
+        gender = null;
+        int selectedId = radioGroupGender.getCheckedRadioButtonId(); // Get the id of the selected radio button
+        if (selectedId != -1) {
+             radioButton = (RadioButton) findViewById(selectedId);
+            gender = radioButton.getText().toString(); // Get the text from the selected RadioButton
+        }
+
+        if(gender == null) {
+            Toast.makeText(this, "Please select your gender.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         if (TextUtils.isEmpty(email)) {
             Toast.makeText(this, "Email is required.", Toast.LENGTH_SHORT).show();
@@ -111,6 +135,27 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
+
+                    userID = fAuth.getCurrentUser().getUid();
+                    DocumentReference documentReference = fstore.collection("users").document(userID);
+                    Map<String,Object> user = new HashMap<>();
+                    user.put("firstName", firstName);
+                    user.put("lastName", lastName);
+                    user.put("email", email);
+                    user.put("password", password);
+                    user.put("gender", gender);
+                    documentReference.set(user).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d("TAG", "DocumentSnapshot added with ID: " + userID);
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w("TAG", "Error adding document", e);
+                        }
+                    });
+
                     Toast.makeText(SignUp.this, "User Created.", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(SignUp.this, HomePage.class);
                     startActivity(intent);
