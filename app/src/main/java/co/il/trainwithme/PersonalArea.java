@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -21,16 +22,20 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
 
 public class PersonalArea extends AppCompatActivity implements View.OnClickListener{
+    private int year, month, day, age;
     private TextView firstName_personal, lastName_personal, email_personal, age_personal, gender_personal ;
     private TextView workoutsCreated,workoutsJoined;
-    private String firstName, lastName, email, age, userId, gender;
+    private String firstName, lastName, email, userId, gender, birthdate;
     private FirebaseAuth fAuth;
     private FirebaseFirestore fstore;
     private Button changeInfoButton, sendFriendRequestButton, pendingRequestsButton;
+    private ImageButton HomePageButton, ScoreBoardButton, addWorkoutButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +59,14 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         pendingRequestsButton.setOnClickListener(this);
         sendFriendRequestButton.setOnClickListener(this);
 
+        HomePageButton = findViewById(R.id.homepage2);
+        ScoreBoardButton = findViewById(R.id.scoreboard2);
+        addWorkoutButton = findViewById(R.id.createWorkout2);
+
+        addWorkoutButton.setOnClickListener(this);
+        HomePageButton.setOnClickListener(this);
+        ScoreBoardButton.setOnClickListener(this);
+
         // Retrieve user data
         // Initialize FirebaseAuth and FirebaseFirestore
         fAuth = FirebaseAuth.getInstance();
@@ -70,11 +83,23 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                         firstName = documentSnapshot.getString("firstName");
                         lastName = documentSnapshot.getString("lastName");
                         email = documentSnapshot.getString("email");
-                        //age = documentSnapshot.getString("age");
+                        birthdate = documentSnapshot.getString("birthdate");
+
+                        String[] dateArray = birthdate.split("/");
+                        year = Integer.parseInt(dateArray[2]);
+                        month = Integer.parseInt(dateArray[1]);
+                        day = Integer.parseInt(dateArray[0]);
+
+                        age = calculateAge(year, month, day);
+
+
+
+
                         gender = documentSnapshot.getString("gender");
                         firstName_personal.setText(firstName);
                         lastName_personal.setText(lastName);
                         email_personal.setText(email);
+                        age_personal.setText(String.valueOf(age));
                         //age_personal.setText(age);
                         gender_personal.setText(gender);
                     }
@@ -96,6 +121,18 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         }
         else if(v == pendingRequestsButton){
             showPendingRequestsPopup();
+        }
+        else if(v == HomePageButton){
+            Intent intent = new Intent(PersonalArea.this, HomePage.class);
+            startActivity(intent);
+        }
+        else if(v == ScoreBoardButton){
+            Intent intent = new Intent(PersonalArea.this, ScoreBoard.class);
+            startActivity(intent);
+        }
+        else if(v == addWorkoutButton){
+            Intent intent = new Intent(PersonalArea.this, addWorkout.class);
+            startActivity(intent);
         }
     }
 
@@ -189,5 +226,10 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                 .setNegativeButton("Close", null)
                 .create()
                 .show();
+    }
+    private int calculateAge(int year, int month, int day) {
+        LocalDate birthDate = LocalDate.of(year, month, day);
+        LocalDate currentDate = LocalDate.now();
+        return Period.between(birthDate, currentDate).getYears();
     }
 }

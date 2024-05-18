@@ -57,7 +57,7 @@
                     android:id="@+id/firstName_personal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="John"
+                    android:text="your Name"
                     android:layout_marginBottom="8dp"
                     android:paddingLeft="8dp" />
 
@@ -72,7 +72,7 @@
                     android:id="@+id/lastName_personal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Doe"
+                    android:text="your last name"
                     android:layout_marginBottom="8dp"
                     android:paddingLeft="8dp" />
 
@@ -87,7 +87,7 @@
                     android:id="@+id/email_personal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="john.doe@example.com"
+                    android:text="yourEmail@example.com"
                     android:layout_marginBottom="8dp"
                     android:paddingLeft="8dp" />
 
@@ -325,7 +325,7 @@
             android:scaleType="centerInside" />
 
         <ImageButton
-            android:id="@+id/createWorkout"
+            android:id="@+id/createWorkout2"
             android:layout_width="0dp"
             android:layout_height="70dp"
             android:layout_weight="1"
@@ -334,7 +334,7 @@
             android:scaleType="centerInside" />
 
         <ImageButton
-            android:id="@+id/scoreboard"
+            android:id="@+id/scoreboard2"
             android:layout_width="0dp"
             android:layout_height="70dp"
             android:layout_weight="1"
@@ -343,7 +343,7 @@
             android:scaleType="centerInside" />
 
         <ImageButton
-            android:id="@+id/homepage"
+            android:id="@+id/homepage2"
             android:layout_width="0dp"
             android:layout_height="70dp"
             android:layout_weight="1"

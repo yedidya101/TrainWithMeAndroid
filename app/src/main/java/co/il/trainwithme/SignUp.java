@@ -25,6 +25,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -40,7 +41,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
     private RadioGroup radioGroupGender;
     private RadioButton radioButton;
     private FirebaseAuth fAuth;
-    private String gender, userID;
+    private String gender, userID, birthdate;
     private FirebaseFirestore fstore;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,20 +131,51 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
             Toast.makeText(this, "Passwords do not match.", Toast.LENGTH_SHORT).show();
             return;
         }
+        if(TextUtils.isEmpty(firstName)) {
+            Toast.makeText(this, "First Name is required.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if(TextUtils.isEmpty(lastName)) {
+            Toast.makeText(this, "Last Name is required.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if(TextUtils.isEmpty(birthdate)) {
+            Toast.makeText(this, "Birthdate is required.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         fAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
+                    //send verification email
+                    FirebaseUser fuser = fAuth.getCurrentUser();
+                    fuser.sendEmailVerification().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void unused) {
+
+                            Toast.makeText(SignUp.this, "Verification Email Sent.", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(SignUp.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
 
                     userID = fAuth.getCurrentUser().getUid();
                     DocumentReference documentReference = fstore.collection("users").document(userID);
                     Map<String,Object> user = new HashMap<>();
                     user.put("firstName", firstName);
                     user.put("lastName", lastName);
+                    user.put("birthdate", birthdate);
                     user.put("email", email);
                     user.put("password", password);
                     user.put("gender", gender);
+
                     documentReference.set(user).addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
@@ -179,13 +211,16 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
+
+
         DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
-                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                    public void onDateSet(DatePicker view, int chosenyear, int chosenmonth, int dayOfMonth) {
                         selectedDate = Calendar.getInstance();
-                        selectedDate.set(year, month, dayOfMonth);
-                        chosenDate.setText(dayOfMonth + "/" + (month + 1) + "/" + year);
+                        selectedDate.set(chosenyear, chosenmonth, dayOfMonth);
+                        birthdate = dayOfMonth + "/" + (chosenmonth + 1) + "/" + chosenyear;
+                        chosenDate.setText("Birthdate: " + dayOfMonth + "/" + (chosenmonth + 1) + "/" + chosenyear);
                     }
                 }, year, month, day);
         datePickerDialog.show();

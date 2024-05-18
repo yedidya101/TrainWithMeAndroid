@@ -1,158 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#9BC7D6"> <!-- Set background color here -->
+    android:background="#9BC7D6"
+    android:padding="16dp"
+    tools:context=".HomePage">
 
-   <!-- Static top part (30% of the screen) -->
+   <!-- Static top part (Explore section) -->
    <LinearLayout
        android:id="@+id/top_part"
        android:layout_width="match_parent"
-       android:layout_height="0sp"
-       android:layout_weight="2"
-       android:orientation="vertical">
+       android:layout_height="wrap_content"
+       android:orientation="vertical"
+       android:background="@drawable/rounded_corner_box"
+       android:padding="16dp"
+       android:elevation="4dp"
+       android:layout_marginBottom="16dp">
 
       <TextView
-          android:id = "@+id/ExploreText"
-          android:layout_width = "wrap_content"
-          android:layout_height = "40sp"
-          android:layout_gravity = "center"
-          android:textColor = "@color/black"
-          android:gravity = "center"
+          android:id="@+id/ExploreText"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:textColor="@color/black"
+          android:gravity="center"
           android:text="Explore"
-          android:textSize = "24sp" />
+          android:textSize="24sp"
+          android:layout_marginBottom="8dp" />
 
       <View
           android:id="@+id/white_line"
           android:layout_width="match_parent"
-          android:layout_height="2sp"
-          android:background="@android:color/white" />
+          android:layout_height="2dp"
+          android:background="@android:color/white"
+          android:layout_marginBottom="8dp" />
 
       <TextView
-          android:id = "@+id/DailyStreak"
-          android:layout_width = "wrap_content"
-          android:layout_height = "25sp"
-          android:layout_gravity = "start"
-          android:textColor = "@color/black"
-          android:gravity = "center"
+          android:id="@+id/DailyStreak"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="start"
+          android:textColor="@color/black"
+          android:gravity="center"
           android:text="@string/daily_streak_5_ud83d_udd25"
-          android:textSize = "20sp" />
+          android:textSize="20sp"
+          android:layout_marginBottom="8dp" />
 
       <TextView
-          android:id = "@+id/MainPageTitle"
-          android:layout_width = "wrap_content"
-          android:layout_height = "30sp"
-          android:layout_gravity = "left"
-          android:layout_marginTop="25sp"
-          android:textColor = "@color/black"
-          android:gravity = "center"
+          android:id="@+id/MainPageTitle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="left"
+          android:layout_marginTop="25dp"
+          android:textColor="@color/black"
+          android:gravity="center"
           android:text="Latest confirmed workouts in your Area:"
-          android:textSize = "22sp"
-          tools:ignore="HardcodedText" />
+          android:textSize="22sp"
+          tools:ignore="HardcodedText"
+          android:layout_marginBottom="8dp" />
+
+      <TextView
+          android:id="@+id/emailNotVerifiedText"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Email not verified"
+          android:textColor="@android:color/holo_red_dark"
+          android:textSize="18sp"
+          android:gravity="center"
+          android:layout_marginBottom="8dp" />
+
+      <Button
+          android:id="@+id/verifyNowButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="VERIFY NOW"
+          android:backgroundTint="@android:color/holo_red_dark"
+          android:textColor="@android:color/white"
+          android:padding="8dp" />
+
+      <Button
+          android:id="@+id/filterButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginBottom="16dp"
+          android:backgroundTint="@android:color/holo_blue_dark"
+          android:elevation="4dp"
+          android:padding="8dp"
+          android:text="Filter"
+          android:textColor="@android:color/white" />
+
 
    </LinearLayout>
 
-      <!-- Add your static content here -->
+   <!-- Filter Button -->
 
-   <!-- Scrollable lower part (70% of the screen) -->
+   <!-- Scrollable lower part (Workout list) -->
    <ScrollView
        android:layout_width="match_parent"
-       android:layout_height="43sp"
-       android:layout_weight="7">
+       android:layout_height="match_parent"
+       android:layout_below="@+id/top_part"
+       android:layout_above="@+id/bottom_navigation">
+
       <LinearLayout
           android:layout_width="match_parent"
-          android:layout_height="0sp"
+          android:layout_height="wrap_content"
           android:orientation="vertical">
-         <!-- Add your buttons here -->
+
+         <!-- Example workout button -->
          <Button
              android:layout_gravity="center"
-             android:layout_width="350sp"
-             android:layout_height="160sp"
-             android:layout_marginBottom="20sp"
-             android:backgroundTint ="#D9D9D9"
-             android:text="@string/button_1" />
+             android:layout_width="350dp"
+             android:layout_height="160dp"
+             android:layout_marginBottom="20dp"
+             android:backgroundTint="#D9D9D9"
+             android:text="Workout 1" />
 
          <Button
-             android:layout_width="350sp"
-             android:layout_height="160sp"
+             android:layout_width="350dp"
+             android:layout_height="160dp"
              android:layout_gravity="center"
-             android:layout_marginBottom="20sp"
-             android:backgroundTint ="#D9D9D9"
-             android:text="@string/button_2" />
+             android:layout_marginBottom="20dp"
+             android:backgroundTint="#D9D9D9"
+             android:text="Workout 2" />
 
          <Button
              android:layout_gravity="center"
-             android:layout_width="350sp"
-             android:layout_height="160sp"
-             android:layout_marginBottom="20sp"
-             android:backgroundTint ="#D9D9D9"
-             android:text="@string/button_3" />
-         <Button
-             android:layout_gravity="center"
-             android:layout_width="350sp"
-             android:layout_height="160sp"
-             android:layout_marginBottom="20sp"
-             android:backgroundTint ="#D9D9D9"
-             android:text="@string/button_3" />
-         <Button
-             android:layout_gravity="center"
-             android:layout_width="350sp"
-             android:layout_height="160sp"
-             android:layout_marginBottom="20sp"
-             android:backgroundTint ="#D9D9D9"
-             android:text="@string/button_3" />
-         <Button
-             android:layout_gravity="center"
-             android:layout_width="350sp"
-             android:layout_height="160sp"
-             android:layout_marginBottom="20sp"
-             android:backgroundTint ="#D9D9D9"
-             android:text="@string/button_3" />
-         <!-- Add more buttons as needed -->
+             android:layout_width="350dp"
+             android:layout_height="160dp"
+             android:layout_marginBottom="20dp"
+             android:backgroundTint="#D9D9D9"
+             android:text="Workout 3" />
+
+         <!-- Add more workout buttons as needed -->
       </LinearLayout>
-    </ScrollView>
+   </ScrollView>
+
+   <!-- Bottom Navigation Buttons (Fixed at the Bottom) -->
    <LinearLayout
-       android:id="@+id/buttom_part"
+       android:id="@+id/bottom_navigation"
        android:layout_width="match_parent"
-       android:layout_height="0sp"
-       android:layout_weight="0.9"
+       android:layout_height="wrap_content"
        android:orientation="horizontal"
-       android:background="#D9D9D9"> <!-- Set background color here -->
+       android:background="#D9D9D9"
+       android:padding="8dp"
+       android:layout_alignParentBottom="true">
 
       <ImageButton
-          android:id = "@+id/personal"
-          android:layout_width="80sp"
-          android:layout_height="70sp"
+          android:id="@+id/personal"
+          android:layout_width="0dp"
+          android:layout_height="70dp"
+          android:layout_weight="1"
           android:background="@drawable/personal"
-          android:layout_marginStart="15sp"
-          />
-
+          android:layout_margin="8dp"
+          android:scaleType="centerInside" />
 
       <ImageButton
-          android:id = "@+id/createWorkout"
-          android:layout_width="80sp"
-          android:layout_height="70sp"
+          android:id="@+id/createWorkout"
+          android:layout_width="0dp"
+          android:layout_height="70dp"
+          android:layout_weight="1"
           android:background="@drawable/add"
-          android:layout_marginStart="15sp"
-          />
+          android:layout_margin="8dp"
+          android:scaleType="centerInside" />
 
       <ImageButton
-          android:id = "@+id/scoreboard"
-          android:layout_width="80sp"
-          android:layout_height="70sp"
+          android:id="@+id/scoreboard"
+          android:layout_width="0dp"
+          android:layout_height="70dp"
+          android:layout_weight="1"
           android:background="@drawable/scoreboard"
-          android:layout_marginStart="15sp"
-          />
+          android:layout_margin="8dp"
+          android:scaleType="centerInside" />
 
       <ImageButton
-          android:id = "@+id/homepage"
-          android:layout_width="80sp"
-          android:layout_height="70sp"
+          android:id="@+id/homepage"
+          android:layout_width="0dp"
+          android:layout_height="70dp"
+          android:layout_weight="1"
           android:background="@drawable/dumble"
-          android:layout_marginStart="15sp"
-          />
+          android:layout_margin="8dp"
+          android:scaleType="centerInside" />
    </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>
