@@ -1,15 +1,21 @@
 package co.il.trainwithme;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.ImageButton;
+import android.widget.NumberPicker;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -28,12 +34,23 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class addWorkout extends AppCompatActivity implements View.OnClickListener, OnMapReadyCallback {
+    private boolean isAgeFiltered = false;
+    private String workoutDate, workoutTime, workoutDuration, FullName, gender;
+    private String userID, firstName, lastName, WorkoutType;
+    private int duration = 0;
     private final int FINE_PERMISSION_CODE = 1;
     private Location currentLocation;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -41,12 +58,15 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
     private LatLng selectedLocation;
 
     private ImageButton btnRunning, btnBasketball, btnPowerWorkout, btnBicycleRide;
-    private Button btnChooseLocation, btnSetWorkout, btnChooseDate, btnChooseTime;
+    private Button btnChooseLocation, btnSetWorkout, btnChooseDate, btnChooseTime, btnChooseDuration;
     private Switch switchPrivateWorkout, ageFilterSwitch;
     private RadioGroup radioGroupGender;
+    private RadioButton radioButton;
     private SeekBar ageRangeSeekBar;
     private TextView ageRangeTextView, tvChosenWorkoutType;
     private ImageButton personal, createWorkout2, scoreboard2, homepage2;
+    private Calendar selectedDate;
+    private TimePickerDialog timePickerDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +82,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         btnSetWorkout = findViewById(R.id.btnSetWorkout);
         btnChooseDate = findViewById(R.id.btnChooseDate);
         btnChooseTime = findViewById(R.id.btnChooseTime);
+        btnChooseDuration = findViewById(R.id.btnChooseDuration);
 
         // Set click listeners
         btnRunning.setOnClickListener(this);
@@ -72,6 +93,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         btnSetWorkout.setOnClickListener(this);
         btnChooseDate.setOnClickListener(this);
         btnChooseTime.setOnClickListener(this);
+        btnChooseDuration.setOnClickListener(this);
 
         // Initialize other views
         switchPrivateWorkout = findViewById(R.id.switchPrivateWorkout);
@@ -97,44 +119,37 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         // Setup age filter functionality
         ageFilterSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
+                isAgeFiltered = true;
                 ageRangeTextView.setVisibility(View.VISIBLE);
                 ageRangeSeekBar.setVisibility(View.VISIBLE);
             } else {
+                isAgeFiltered = false;
                 ageRangeTextView.setVisibility(View.GONE);
                 ageRangeSeekBar.setVisibility(View.GONE);
-                ageRangeTextView.setText("Age range: Any");
             }
         });
 
         ageRangeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                ageRangeTextView.setText("Age range: " + progress);
+                ageRangeTextView.setText("Age range: " + progress + "+");
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
+                // Do nothing
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                // Do nothing
             }
         });
 
-        // Initialize the map
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapFrame);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
-        }
+        userID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Request location permission if not already granted
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_PERMISSION_CODE);
-        } else {
-            // Permission already granted, get the last known location
-            getLastLocationAndInitializeMap();
-        }
+        fetchUserDetails();
+        getLastLocationAndInitializeMap();
     }
 
     @Override
@@ -142,20 +157,26 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         int id = v.getId();
         if (id == R.id.btnRunning) {
             tvChosenWorkoutType.setText("Chosen Workout Type: Running");
+            WorkoutType = "Running";
         } else if (id == R.id.btnBasketball) {
             tvChosenWorkoutType.setText("Chosen Workout Type: Basketball");
+            WorkoutType = "Basketball";
         } else if (id == R.id.btnPowerWorkout) {
             tvChosenWorkoutType.setText("Chosen Workout Type: Strength Workout");
+            WorkoutType = "PowerWorkout";
         } else if (id == R.id.btnBicycleRide) {
             tvChosenWorkoutType.setText("Chosen Workout Type: Bicycle Ride");
+            WorkoutType = "BicycleRide";
         } else if (id == R.id.btnChooseLocation) {
             getLastLocationAndInitializeMap();
         } else if (id == R.id.btnSetWorkout) {
-            // Logic to save workout with selected options
+            saveWorkoutToFirestore();
         } else if (id == R.id.btnChooseDate) {
-            showDatePicker();
+            showDatePickerDialog();
         } else if (id == R.id.btnChooseTime) {
             showTimePicker();
+        } else if (id == R.id.btnChooseDuration) {
+            showDurationPicker();
         } else if (id == R.id.personal) {
             startActivity(new Intent(this, PersonalArea.class));
         } else if (id == R.id.createWorkout2) {
@@ -165,6 +186,98 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         } else if (id == R.id.homepage2) {
             startActivity(new Intent(this, HomePage.class));
         }
+    }
+
+    private void fetchUserDetails() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference docRef = db.collection("users").document(userID);
+        if (docRef != null) {
+            docRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                @Override
+                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                    if (documentSnapshot.exists()) {
+                        firstName = documentSnapshot.getString("firstName");
+                        lastName = documentSnapshot.getString("lastName");
+                        FullName = firstName + " " + lastName;
+                    }
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(addWorkout.this, "Failed to fetch user data", Toast.LENGTH_SHORT).show();
+                    Log.e("Firestore", "Error fetching user data", e);
+                }
+            });
+        }
+    }
+
+    private void saveWorkoutToFirestore() {
+        gender = null;
+        int selectedId = radioGroupGender.getCheckedRadioButtonId();
+        if (selectedId != -1) {
+            RadioButton selectedRadioButton = findViewById(selectedId);
+            gender = selectedRadioButton.getText().toString();
+        }
+
+        if (FullName == null) {
+            Toast.makeText(this, "User data not loaded yet, please wait...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (WorkoutType == null) {
+            Toast.makeText(this, "Please choose a workout type", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (gender == null) {
+            Toast.makeText(this, "Please choose your gender", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (duration == 0) {
+            Toast.makeText(this, "Please choose a workout duration", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (isAgeFiltered && ageRangeTextView.getText().toString().equals("Age range: ")) {
+            Toast.makeText(this, "Please choose minimal age", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> workoutData = new HashMap<>();
+        workoutData.put("workoutType", WorkoutType);
+        workoutData.put("privateWorkout", switchPrivateWorkout.isChecked());
+        workoutData.put("date", workoutDate);
+        workoutData.put("time", workoutTime);
+        workoutData.put("duration", duration);
+        workoutData.put("ageFiltered", isAgeFiltered);
+        workoutData.put("creatorId", userID);
+        workoutData.put("Participants", 1);
+        workoutData.put("creatorName", FullName);
+        workoutData.put("gender", gender);
+        if (isAgeFiltered) {
+            workoutData.put("minimumAge", ageRangeTextView.getText().toString().replace("Age range: ", ""));
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("workouts")
+                .add(workoutData)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Toast.makeText(addWorkout.this, "Workout added successfully", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(addWorkout.this, HomePage.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(addWorkout.this, "Error adding workout", Toast.LENGTH_SHORT).show();
+                        Log.e("Firestore", "Error adding workout", e);
+                    }
+                });
     }
 
     private void getLastLocationAndInitializeMap() {
@@ -208,42 +321,78 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
             }
         });
 
-        // Check if currentLocation is already available
         if (currentLocation != null) {
             LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
             myMap.addMarker(new MarkerOptions().position(currentLatLng).title("My Location"));
             myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
         } else {
-            // If currentLocation is not yet available, get it
             getLastLocationAndInitializeMap();
         }
     }
 
-    private void showDatePicker() {
-        Calendar calendar = Calendar.getInstance();
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
-            // Handle date selection
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+    private void showDatePickerDialog() {
+        final Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int chosenyear, int chosenmonth, int dayOfMonth) {
+                        selectedDate = Calendar.getInstance();
+                        selectedDate.set(chosenyear, chosenmonth, dayOfMonth);
+                        workoutDate = dayOfMonth + "/" + (chosenmonth + 1) + "/" + chosenyear;
+                    }
+                }, year, month, day);
         datePickerDialog.show();
     }
 
     private void showTimePicker() {
         Calendar calendar = Calendar.getInstance();
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this, (view, hourOfDay, minute) -> {
-            // Handle time selection
-        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = calendar.get(Calendar.MINUTE);
+
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
+                new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(android.widget.TimePicker view, int hourOfDay, int minute) {
+                        workoutTime = hourOfDay + ":" + (minute < 10 ? "0" + minute : minute);
+                        Toast.makeText(addWorkout.this, "Chosen Time: " + workoutTime, Toast.LENGTH_SHORT).show();
+                    }
+                }, currentHour, currentMinute, true);
         timePickerDialog.show();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == FINE_PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLastLocationAndInitializeMap();
-            } else {
-                Toast.makeText(this, "Location Permission Denied", Toast.LENGTH_SHORT).show();
+    private void showDurationPicker() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_duration_picker, null);
+        builder.setView(dialogView);
+
+        NumberPicker npHours = dialogView.findViewById(R.id.np_hours);
+        NumberPicker npMinutes = dialogView.findViewById(R.id.np_minutes);
+        Button btnSetDuration = dialogView.findViewById(R.id.btn_set_duration);
+
+        npHours.setMinValue(0);
+        npHours.setMaxValue(23);
+        npMinutes.setMinValue(0);
+        npMinutes.setMaxValue(59);
+
+        final AlertDialog dialog = builder.create();
+
+        btnSetDuration.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int hours = npHours.getValue();
+                int minutes = npMinutes.getValue();
+                duration = hours * 60 + minutes;
+                String workoutDuration = hours + " hours " + minutes + " minutes";
+                Toast.makeText(getApplicationContext(), "Chosen Duration: " + workoutDuration, Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
             }
-        }
+        });
+
+        dialog.show();
     }
 }

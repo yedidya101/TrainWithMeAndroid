@@ -139,6 +139,15 @@
                 android:background="@drawable/button_background"
                 android:textColor="@android:color/white" />
 
+            <Button
+                android:id="@+id/btnChooseDuration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Choose Duration"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/button_background"
+                android:textColor="@android:color/white" />
+
             <!-- Filters Section -->
             <TextView
                 android:layout_width="wrap_content"
@@ -247,7 +256,7 @@
     <!-- Bottom Navigation -->
     <LinearLayout
         android:id="@+id/bottom_navigation"
-        android:layout_width="380dp"
+        android:layout_width="365dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="#D9D9D9"

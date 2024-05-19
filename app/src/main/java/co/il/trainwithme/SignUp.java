@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SignUp extends AppCompatActivity implements View.OnClickListener {
+    int workoutJoined = 0;
     private TextView chosenDate, Back4, agreementText;
     private Calendar selectedDate;
     private Button btnSignUp;
@@ -175,6 +176,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
                     user.put("email", email);
                     user.put("password", password);
                     user.put("gender", gender);
+                    user.put("workoutJoined", workoutJoined);
 
                     documentReference.set(user).addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override

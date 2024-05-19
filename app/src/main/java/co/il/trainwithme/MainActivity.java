@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Intent loginIntent = new Intent(MainActivity.this, HomePage.class);
                     startActivity(loginIntent);
                 } else {
-                    Toast.makeText(MainActivity.this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Login failed: " + "wrong email or password", Toast.LENGTH_SHORT).show();
                 }
             }
         });

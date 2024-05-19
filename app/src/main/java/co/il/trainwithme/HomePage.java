@@ -28,7 +28,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     ImageButton addWorkoutButton;
     ImageButton personalAreaButton;
     ImageButton ScoreBoardButton;
-    ImageButton homeButton;
+    ImageButton homeButton, logoutButton;
     TextView emailNotVerifiedText;
     Button verifyNowButton;
     Button filterButton;
@@ -49,12 +49,16 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         verifyNowButton = findViewById(R.id.verifyNowButton);
         filterButton = findViewById(R.id.filterButton);
 
+        logoutButton = findViewById(R.id.logoutbutton);
+
         addWorkoutButton.setOnClickListener(this);
         personalAreaButton.setOnClickListener(this);
         ScoreBoardButton.setOnClickListener(this);
         homeButton.setOnClickListener(this);
         verifyNowButton.setOnClickListener(this);
         filterButton.setOnClickListener(this);
+        logoutButton.setOnClickListener(this);
+
 
         fAuth = FirebaseAuth.getInstance();
         currentUser = fAuth.getCurrentUser();
@@ -74,12 +78,15 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         if (v == addWorkoutButton) {
             Intent intent = new Intent(HomePage.this, addWorkout.class);
             startActivity(intent);
+            finish();
         } else if (v == personalAreaButton) {
             Intent intent = new Intent(HomePage.this, PersonalArea.class);
             startActivity(intent);
+            finish();
         } else if (v == ScoreBoardButton) {
             Intent intent = new Intent(HomePage.this, ScoreBoard.class);
             startActivity(intent);
+            finish();
         } else if (v == homeButton) {
             //Intent intent = new Intent(HomePage.this, HomePage.class);
             //startActivity(intent);
@@ -88,6 +95,16 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         } else if (v == filterButton) {
             showFilterDialog();
         }
+        else if(v == logoutButton){
+            logout();
+        }
+    }
+
+    private void logout() {
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(HomePage.this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private void sendVerificationEmail() {

@@ -11,23 +11,38 @@
    <LinearLayout
        android:id="@+id/top_part"
        android:layout_width="match_parent"
-       android:layout_height="wrap_content"
+       android:layout_height="328dp"
        android:orientation="vertical"
        android:background="@drawable/rounded_corner_box"
        android:padding="16dp"
        android:elevation="4dp"
        android:layout_marginBottom="16dp">
 
-      <TextView
-          android:id="@+id/ExploreText"
-          android:layout_width="wrap_content"
+      <RelativeLayout
+          android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:layout_gravity="center"
-          android:textColor="@color/black"
-          android:gravity="center"
-          android:text="Explore"
-          android:textSize="24sp"
-          android:layout_marginBottom="8dp" />
+          android:layout_marginBottom="8dp">
+
+         <TextView
+             android:id="@+id/ExploreText"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:paddingStart="120dp"
+             android:textColor="@color/black"
+             android:text="Explore"
+             android:textSize="24sp"
+             android:layout_alignParentLeft="true"
+             android:layout_centerVertical="true" />
+
+         <ImageButton
+             android:id="@+id/logoutbutton"
+             android:layout_width="50dp"
+             android:layout_height="50dp"
+             android:background="@drawable/loggout"
+             android:layout_alignParentRight="true"
+             android:layout_centerVertical="true"
+             android:scaleType="centerInside" />
+      </RelativeLayout>
 
       <View
           android:id="@+id/white_line"
@@ -40,9 +55,7 @@
           android:id="@+id/DailyStreak"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:layout_gravity="start"
           android:textColor="@color/black"
-          android:gravity="center"
           android:text="@string/daily_streak_5_ud83d_udd25"
           android:textSize="20sp"
           android:layout_marginBottom="8dp" />
@@ -51,14 +64,13 @@
           android:id="@+id/MainPageTitle"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:layout_gravity="left"
           android:layout_marginTop="25dp"
           android:textColor="@color/black"
-          android:gravity="center"
           android:text="Latest confirmed workouts in your Area:"
           android:textSize="22sp"
           tools:ignore="HardcodedText"
           android:layout_marginBottom="8dp" />
+
 
       <TextView
           android:id="@+id/emailNotVerifiedText"
@@ -67,8 +79,23 @@
           android:text="Email not verified"
           android:textColor="@android:color/holo_red_dark"
           android:textSize="18sp"
-          android:gravity="center"
           android:layout_marginBottom="8dp" />
+      <RelativeLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginBottom="8dp">
+
+         <Button
+             android:id="@+id/filterButton"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_marginBottom="16dp"
+             android:backgroundTint="@android:color/holo_blue_dark"
+             android:elevation="4dp"
+             android:layout_alignParentRight="true"
+             android:padding="8dp"
+             android:text="Filter"
+             android:textColor="@android:color/white" />
 
       <Button
           android:id="@+id/verifyNowButton"
@@ -77,23 +104,12 @@
           android:text="VERIFY NOW"
           android:backgroundTint="@android:color/holo_red_dark"
           android:textColor="@android:color/white"
-          android:padding="8dp" />
-
-      <Button
-          android:id="@+id/filterButton"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_marginBottom="16dp"
-          android:backgroundTint="@android:color/holo_blue_dark"
-          android:elevation="4dp"
           android:padding="8dp"
-          android:text="Filter"
-          android:textColor="@android:color/white" />
+          android:layout_marginBottom="8dp" />
 
 
+      </RelativeLayout>
    </LinearLayout>
-
-   <!-- Filter Button -->
 
    <!-- Scrollable lower part (Workout list) -->
    <ScrollView
