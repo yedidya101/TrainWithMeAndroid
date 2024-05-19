@@ -51,7 +51,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
     private String workoutDate, workoutTime, workoutDuration, FullName, gender;
     private String userID, firstName, lastName, WorkoutType;
     private int duration = 0;
-    private int workoutParticipated = 0;
+    private int workoutParticipated = 0, workoutCreated = 0;
     private final int FINE_PERMISSION_CODE = 1;
     private Location currentLocation;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -200,6 +200,8 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                         firstName = documentSnapshot.getString("firstName");
                         lastName = documentSnapshot.getString("lastName");
                         workoutParticipated = documentSnapshot.getLong("workoutJoined").intValue();
+                        workoutCreated = documentSnapshot.getLong("workoutCreated").intValue();
+
                         FullName = firstName + " " + lastName;
                     }
                 }
@@ -248,6 +250,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
 
         // Increment workoutParticipated before saving workout data
         workoutParticipated += 1;
+        workoutCreated += 1;
 
         Map<String, Object> workoutData = new HashMap<>();
         workoutData.put("workoutType", WorkoutType);
@@ -268,7 +271,8 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
 
         // Update the user's workoutParticipated count first
         DocumentReference userDocRef = db.collection("users").document(userID);
-        userDocRef.update("workoutJoined", workoutParticipated)
+        userDocRef.update("workoutJoined", workoutParticipated);
+        userDocRef.update("workoutCreated", workoutCreated)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -409,6 +413,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                 int hours = npHours.getValue();
                 int minutes = npMinutes.getValue();
                 duration = hours * 60 + minutes;
+                btnChooseDuration.setText(duration + " minutes");
 
                 if(hours == 0 && minutes == 0) {
                     Toast.makeText(getApplicationContext(), "Please select duration", Toast.LENGTH_SHORT).show();

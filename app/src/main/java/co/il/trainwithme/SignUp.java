@@ -28,6 +28,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -38,12 +39,13 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
     private TextView chosenDate, Back4, agreementText;
     private Calendar selectedDate;
     private Button btnSignUp;
-    private EditText mFirstName, mLastName, mEmail, mPassword, mConfirmPassword;
+    private EditText mFirstName, mLastName, mEmail, mPassword, mConfirmPassword, mUsername;
     private RadioGroup radioGroupGender;
     private RadioButton radioButton;
     private FirebaseAuth fAuth;
     private String gender, userID, birthdate;
     private FirebaseFirestore fstore;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +58,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         radioGroupGender = findViewById(R.id.radioGroupGender);
 
         // Initialize TextInputLayout
+        TextInputLayout usernameLayout = findViewById(R.id.usernameLayout);
         TextInputLayout firstNameLayout = findViewById(R.id.firstNameLayout);
         TextInputLayout lastNameLayout = findViewById(R.id.lastNameLayout);
         TextInputLayout emailLayout = findViewById(R.id.emailLayout);
@@ -63,6 +66,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         TextInputLayout confirmPasswordLayout = findViewById(R.id.confirmPasswordLayout);
 
         // Retrieve EditText from TextInputLayout
+        mUsername = usernameLayout.getEditText();
         mFirstName = firstNameLayout.getEditText();
         mLastName = lastNameLayout.getEditText();
         mEmail = emailLayout.getEditText();
@@ -96,6 +100,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void registerUser() {
+        String username = mUsername.getText().toString().trim();
         String email = mEmail.getText().toString().trim();
         String password = mPassword.getText().toString().trim();
         String confirmPassword = mConfirmPassword.getText().toString().trim();
@@ -104,11 +109,16 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         gender = null;
         int selectedId = radioGroupGender.getCheckedRadioButtonId(); // Get the id of the selected radio button
         if (selectedId != -1) {
-             radioButton = (RadioButton) findViewById(selectedId);
+            radioButton = (RadioButton) findViewById(selectedId);
             gender = radioButton.getText().toString(); // Get the text from the selected RadioButton
         }
 
-        if(gender == null) {
+        if (TextUtils.isEmpty(username)) {
+            Toast.makeText(this, "Username is required.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (gender == null) {
             Toast.makeText(this, "Please select your gender.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -132,44 +142,65 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
             Toast.makeText(this, "Passwords do not match.", Toast.LENGTH_SHORT).show();
             return;
         }
-        if(TextUtils.isEmpty(firstName)) {
+
+        if (TextUtils.isEmpty(firstName)) {
             Toast.makeText(this, "First Name is required.", Toast.LENGTH_SHORT).show();
             return;
         }
-        if(TextUtils.isEmpty(lastName)) {
+
+        if (TextUtils.isEmpty(lastName)) {
             Toast.makeText(this, "Last Name is required.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if(TextUtils.isEmpty(birthdate)) {
+        if (TextUtils.isEmpty(birthdate)) {
             Toast.makeText(this, "Birthdate is required.", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        fstore.collection("users")
+                .whereEqualTo("username", username)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            if (!task.getResult().isEmpty()) {
+                                Toast.makeText(SignUp.this, "Username occupied, please choose another one.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                createFirebaseUser(username, email, password, firstName, lastName, birthdate, gender);
+                            }
+                        } else {
+                            Toast.makeText(SignUp.this, "Error checking username availability: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+
+                        }
+                    }
+                });
+    }
+
+    private void createFirebaseUser(String username, String email, String password, String firstName, String lastName, String birthdate, String gender) {
         fAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
-                    //send verification email
+                    // Send verification email
                     FirebaseUser fuser = fAuth.getCurrentUser();
                     fuser.sendEmailVerification().addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void unused) {
-
                             Toast.makeText(SignUp.this, "Verification Email Sent.", Toast.LENGTH_SHORT).show();
                         }
-                    })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Toast.makeText(SignUp.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-                            });
-
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(SignUp.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
                     userID = fAuth.getCurrentUser().getUid();
                     DocumentReference documentReference = fstore.collection("users").document(userID);
-                    Map<String,Object> user = new HashMap<>();
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("username", username);
                     user.put("firstName", firstName);
                     user.put("lastName", lastName);
                     user.put("birthdate", birthdate);
@@ -177,6 +208,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
                     user.put("password", password);
                     user.put("gender", gender);
                     user.put("workoutJoined", workoutJoined);
+                    user.put("workoutCreated", 0);
 
                     documentReference.set(user).addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
@@ -212,8 +244,6 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                 new DatePickerDialog.OnDateSetListener() {

@@ -211,8 +211,9 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             startActivity(intent);
             finish();
         } else if (v == homeButton) {
-            //Intent intent = new Intent(HomePage.this, HomePage.class);
-            //startActivity(intent);
+            Intent intent = new Intent(HomePage.this, HomePage.class);
+            startActivity(intent);
+            finish();
         } else if (v == verifyNowButton) {
             sendVerificationEmail();
         } else if (v == filterButton) {
