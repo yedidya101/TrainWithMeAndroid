@@ -51,6 +51,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
     private String workoutDate, workoutTime, workoutDuration, FullName, gender;
     private String userID, firstName, lastName, WorkoutType;
     private int duration = 0;
+    private int workoutParticipated = 0;
     private final int FINE_PERMISSION_CODE = 1;
     private Location currentLocation;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -157,16 +158,16 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         int id = v.getId();
         if (id == R.id.btnRunning) {
             tvChosenWorkoutType.setText("Chosen Workout Type: Running");
-            WorkoutType = "Running";
+            WorkoutType = "run";
         } else if (id == R.id.btnBasketball) {
             tvChosenWorkoutType.setText("Chosen Workout Type: Basketball");
-            WorkoutType = "Basketball";
+            WorkoutType = "basketball";
         } else if (id == R.id.btnPowerWorkout) {
             tvChosenWorkoutType.setText("Chosen Workout Type: Strength Workout");
-            WorkoutType = "PowerWorkout";
+            WorkoutType = "power";
         } else if (id == R.id.btnBicycleRide) {
             tvChosenWorkoutType.setText("Chosen Workout Type: Bicycle Ride");
-            WorkoutType = "BicycleRide";
+            WorkoutType = "ride";
         } else if (id == R.id.btnChooseLocation) {
             getLastLocationAndInitializeMap();
         } else if (id == R.id.btnSetWorkout) {
@@ -198,6 +199,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                     if (documentSnapshot.exists()) {
                         firstName = documentSnapshot.getString("firstName");
                         lastName = documentSnapshot.getString("lastName");
+                        workoutParticipated = documentSnapshot.getLong("workoutJoined").intValue();
                         FullName = firstName + " " + lastName;
                     }
                 }
@@ -244,6 +246,9 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
             return;
         }
 
+        // Increment workoutParticipated before saving workout data
+        workoutParticipated += 1;
+
         Map<String, Object> workoutData = new HashMap<>();
         workoutData.put("workoutType", WorkoutType);
         workoutData.put("privateWorkout", switchPrivateWorkout.isChecked());
@@ -260,22 +265,39 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         }
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("workouts")
-                .add(workoutData)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+
+        // Update the user's workoutParticipated count first
+        DocumentReference userDocRef = db.collection("users").document(userID);
+        userDocRef.update("workoutJoined", workoutParticipated)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Toast.makeText(addWorkout.this, "Workout added successfully", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(addWorkout.this, HomePage.class);
-                        startActivity(intent);
-                        finish();
+                    public void onSuccess(Void aVoid) {
+                        // Now add the workout data
+                        db.collection("workouts")
+                                .add(workoutData)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        Toast.makeText(addWorkout.this, "Workout added successfully", Toast.LENGTH_SHORT).show();
+                                        Intent intent = new Intent(addWorkout.this, HomePage.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(addWorkout.this, "Error adding workout", Toast.LENGTH_SHORT).show();
+                                        Log.e("Firestore", "Error adding workout", e);
+                                    }
+                                });
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(addWorkout.this, "Error adding workout", Toast.LENGTH_SHORT).show();
-                        Log.e("Firestore", "Error adding workout", e);
+                        Toast.makeText(addWorkout.this, "Error updating workout count", Toast.LENGTH_SHORT).show();
+                        Log.e("Firestore", "Error updating workout count", e);
                     }
                 });
     }
@@ -387,6 +409,11 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                 int hours = npHours.getValue();
                 int minutes = npMinutes.getValue();
                 duration = hours * 60 + minutes;
+
+                if(hours == 0 && minutes == 0) {
+                    Toast.makeText(getApplicationContext(), "Please select duration", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 String workoutDuration = hours + " hours " + minutes + " minutes";
                 Toast.makeText(getApplicationContext(), "Chosen Duration: " + workoutDuration, Toast.LENGTH_SHORT).show();
                 dialog.dismiss();

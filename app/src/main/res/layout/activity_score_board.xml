@@ -20,33 +20,39 @@
 
         <!-- Scoreboard title -->
         <TextView
+            android:id="@+id/month"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:text="Month: "
+            android:textSize="20dp"
+            android:layout_gravity="center"/>
+
+        <TextView
             android:id="@+id/ScoreboardText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/black"
+            android:textColor="@android:color/black"
             android:text="Scoreboard"
             android:textSize="24sp"
             android:layout_gravity="center"/>
-
-        <!-- Add other elements as needed -->
 
     </LinearLayout>
 
     <!-- Scrollable lower part (User list) -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:layout_below="@+id/top_part"
         android:layout_above="@+id/bottom_navigation">
 
         <!-- User list -->
         <LinearLayout
+            android:id="@+id/llUsersList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <!-- User items will be added dynamically -->
-
         </LinearLayout>
 
     </ScrollView>

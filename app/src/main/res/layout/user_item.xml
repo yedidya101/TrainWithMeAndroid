@@ -3,36 +3,46 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="16dp">
+    android:padding="8dp"
+    android:background="@drawable/rounded_corner_box"
+    android:layout_marginBottom="8dp"
+    android:elevation="4dp">
 
-    <!-- User place -->
     <TextView
         android:id="@+id/tvPlace"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginEnd="8dp"/>
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="1"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:background="@drawable/circle_background"
+        android:layout_marginEnd="16dp"
+        android:layout_gravity="center_vertical" />
 
-    <!-- User name -->
-    <TextView
-        android:id="@+id/tvUserName"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginEnd="8dp"/>
+        android:orientation="vertical"
+        android:gravity="center_vertical">
 
-    <!-- Number of workouts -->
-    <TextView
-        android:id="@+id/tvWorkouts"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:textStyle="bold"/>
+        <TextView
+            android:id="@+id/tvUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User Name"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/tvWorkouts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 Workouts"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:textStyle="bold" />
+    </LinearLayout>
 </LinearLayout>
