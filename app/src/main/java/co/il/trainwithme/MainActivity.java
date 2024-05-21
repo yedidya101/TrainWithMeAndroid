@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             Toast.makeText(MainActivity.this, "Password reset email sent.", Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
                         } else {
-                            Toast.makeText(MainActivity.this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Error: " + "Email or password is incorrect", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -134,7 +134,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Intent loginIntent = new Intent(MainActivity.this, HomePage.class);
                     startActivity(loginIntent);
                 } else {
-                    Toast.makeText(MainActivity.this, "Login failed: " + "wrong email or password", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Login failed: "+ "Wrong Email or Password", Toast.LENGTH_SHORT).show();
+
                 }
             }
         });

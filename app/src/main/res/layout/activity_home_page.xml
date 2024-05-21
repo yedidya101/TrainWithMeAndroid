@@ -10,7 +10,7 @@
    <LinearLayout
        android:id="@+id/top_part"
        android:layout_width="match_parent"
-       android:layout_height="328dp"
+       android:layout_height="238dp"
        android:orientation="vertical"
        android:background="@drawable/rounded_corner_box"
        android:padding="16dp"
@@ -59,16 +59,7 @@
           android:textSize="20sp"
           android:layout_marginBottom="8dp" />
 
-      <TextView
-          android:id="@+id/MainPageTitle"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="25dp"
-          android:textColor="@color/black"
-          android:text="Latest confirmed workouts in your Area:"
-          android:textSize="22sp"
-          tools:ignore="HardcodedText"
-          android:layout_marginBottom="8dp" />
+
 
       <TextView
           android:id="@+id/emailNotVerifiedText"

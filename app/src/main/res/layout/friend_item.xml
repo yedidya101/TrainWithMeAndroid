@@ -9,14 +9,14 @@
     android:elevation="4dp">
 
     <ImageView
-        android:id="@+id/friendImage"
+        android:id="@+id/friendImageView"
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:scaleType="centerCrop"
         android:layout_gravity="center" />
 
     <TextView
-        android:id="@+id/friendName"
+        android:id="@+id/friendUsernameTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Friend Name"

@@ -65,6 +65,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         TextInputLayout passwordLayout = findViewById(R.id.passwordLayout);
         TextInputLayout confirmPasswordLayout = findViewById(R.id.confirmPasswordLayout);
 
+
         // Retrieve EditText from TextInputLayout
         mUsername = usernameLayout.getEditText();
         mFirstName = firstNameLayout.getEditText();
@@ -72,6 +73,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         mEmail = emailLayout.getEditText();
         mPassword = passwordLayout.getEditText();
         mConfirmPassword = confirmPasswordLayout.getEditText();
+
 
         agreementText.setPaintFlags(agreementText.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
 
@@ -104,8 +106,8 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
         String email = mEmail.getText().toString().trim();
         String password = mPassword.getText().toString().trim();
         String confirmPassword = mConfirmPassword.getText().toString().trim();
-        String firstName = mFirstName.getText().toString();
-        String lastName = mLastName.getText().toString();
+        String firstName = mFirstName.getText().toString().trim();
+        String lastName = mLastName.getText().toString().trim();
         gender = null;
         int selectedId = radioGroupGender.getCheckedRadioButtonId(); // Get the id of the selected radio button
         if (selectedId != -1) {
@@ -164,15 +166,16 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            if (!task.getResult().isEmpty()) {
+                        if (task.isSuccessful()) { // Check if the query was successful
+                            if (!task.getResult().isEmpty()) { // Check if the username is already taken
                                 Toast.makeText(SignUp.this, "Username occupied, please choose another one.", Toast.LENGTH_SHORT).show();
                             } else {
                                 createFirebaseUser(username, email, password, firstName, lastName, birthdate, gender);
                             }
                         } else {
+                            createFirebaseUser(username, email, password, firstName, lastName, birthdate, gender);
+                            Log.d("TAG", "Error 5555: " + task.getException().getMessage());
                             Toast.makeText(SignUp.this, "Error checking username availability: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-
                         }
                     }
                 });

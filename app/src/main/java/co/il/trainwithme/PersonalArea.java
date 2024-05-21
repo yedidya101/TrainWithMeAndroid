@@ -62,8 +62,8 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         gender_personal = findViewById(R.id.gender_personal);
         username = findViewById(R.id.username);
 
-        workoutsCreated = findViewById(R.id.workoutsCreated); // need to add from database
-        workoutsJoined = findViewById(R.id.workoutsParticipated); // need to add from database
+        workoutsCreated = findViewById(R.id.workoutsCreated);
+        workoutsJoined = findViewById(R.id.workoutsParticipated);
 
         sendFriendRequestButton = findViewById(R.id.sendFriendRequestButton);
         pendingRequestsButton = findViewById(R.id.pendingRequestsButton);
@@ -81,12 +81,12 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         HomePageButton.setOnClickListener(this);
         ScoreBoardButton.setOnClickListener(this);
 
+        friendsListContainer = findViewById(R.id.friendsListContainer);
+
         // Retrieve user data
-        // Initialize FirebaseAuth and FirebaseFirestore
         fAuth = FirebaseAuth.getInstance();
         fstore = FirebaseFirestore.getInstance();
 
-        // Ensure fAuth is not null and there's a current user
         if (fAuth.getCurrentUser() != null) {
             userId = fAuth.getCurrentUser().getUid();
             DocumentReference documentReference = fstore.collection("users").document(userId);
@@ -104,7 +104,7 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
 
                         String[] dateArray = birthdate.split("/");
                         year = Integer.parseInt(dateArray[2]);
-                        month = Integer.parseInt(dateArray[1]) - 1; // month is 0-based in Calendar
+                        month = Integer.parseInt(dateArray[1]) - 1;
                         day = Integer.parseInt(dateArray[0]);
 
                         age = calculateAge(year, month, day);
@@ -121,6 +121,8 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                     }
                 }
             });
+
+            loadFriends();
         } else {
             Intent loginintent = new Intent(PersonalArea.this, MainActivity.class);
             startActivity(loginintent);
@@ -162,13 +164,11 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         editFirstName.setText(firstName);
         editLastName.setText(lastName);
 
-        // Set up the Spinner
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.gender_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         editGender.setAdapter(adapter);
 
-        // Set the current gender
         if (gender != null) {
             int spinnerPosition = adapter.getPosition(gender);
             editGender.setSelection(spinnerPosition);
@@ -204,13 +204,11 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                             String newGender = editGender.getSelectedItem().toString();
                             String newBirthdate = setBirthdatebtn.getText().toString();
 
-                            // Update the user's information
                             firstName_personal.setText(newFirstName);
                             lastName_personal.setText(newLastName);
                             gender_personal.setText(newGender);
                             age_personal.setText(String.valueOf(calculateAge(year, month, day)));
 
-                            // Update the user's information in Firestore
                             DocumentReference documentReference = fstore.collection("users").document(userId);
                             Map<String, Object> user = new HashMap<>();
                             user.put("firstName", newFirstName);
@@ -235,185 +233,194 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         View dialogView = inflater.inflate(R.layout.popup_send_friend_request, null);
         builder.setView(dialogView);
 
-        EditText editFriendName = dialogView.findViewById(R.id.editFriendName);
+        final EditText usernameInput = dialogView.findViewById(R.id.editFriendName);
 
         builder.setTitle("Send Friend Request")
                 .setPositiveButton("Send", null)
                 .setNegativeButton("Cancel", null);
 
         AlertDialog dialog = builder.create();
-        dialog.setOnShowListener(dialogInterface -> {
-            Button sendButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            sendButton.setOnClickListener(view -> {
-                String friendName = editFriendName.getText().toString().trim();
-                if (!friendName.isEmpty()) {
-                    sendFriendRequest(friendName, dialog);
-                } else {
-                    Toast.makeText(PersonalArea.this, "Please enter a username.", Toast.LENGTH_SHORT).show();
-                }
-            });
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                Button sendButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                sendButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        String friendUsername = usernameInput.getText().toString().trim();
+
+                        if (friendUsername.isEmpty()) {
+                            usernameInput.setError("Please enter a username");
+                            return;
+                        }
+
+                        sendFriendRequest(friendUsername);
+                        dialog.dismiss();
+                    }
+                });
+            }
         });
 
         dialog.show();
     }
 
-    private void sendFriendRequest(String friendUsername, AlertDialog dialog) {
-        CollectionReference usersRef = fstore.collection("users");
-        usersRef.whereEqualTo("username", friendUsername).get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                        DocumentSnapshot document = task.getResult().getDocuments().get(0);
-                        String friendId = document.getId();
-                        String friendName = document.getString("firstName") + " " + document.getString("lastName");
+    private void sendFriendRequest(String friendUsername) {
+        DocumentReference userDocRef = fstore.collection("users").document(userId);
+        CollectionReference usersCollectionRef = fstore.collection("users");
 
-                        // Check if a friend request already exists
-                        DocumentReference friendRequestRef = fstore.collection("friend_requests").document(friendId).collection("requests").document(userId);
-                        friendRequestRef.get().addOnCompleteListener(friendRequestTask -> {
-                            if (friendRequestTask.isSuccessful() && !friendRequestTask.getResult().exists()) {
-                                // Create a new friend request
-                                Map<String, Object> request = new HashMap<>();
-                                request.put("from", userId);
-                                request.put("fromUsername", pUsername);
-                                request.put("status", "pending");
-                                request.put("timestamp", FieldValue.serverTimestamp());
+        usersCollectionRef.whereEqualTo("username", friendUsername).get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    // Check if the user exists
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        DocumentSnapshot friendSnapshot = queryDocumentSnapshots.getDocuments().get(0);
+                        String friendId = friendSnapshot.getId();
 
-                                friendRequestRef.set(request).addOnCompleteListener(sendRequestTask -> {
-                                    if (sendRequestTask.isSuccessful()) {
-                                        Toast.makeText(PersonalArea.this, "Friend request sent to " + friendName, Toast.LENGTH_SHORT).show();
-                                        dialog.dismiss();
-                                    } else {
-                                        Toast.makeText(PersonalArea.this, "Failed to send friend request. Please try again.", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                            } else {
-                                Toast.makeText(PersonalArea.this, "Friend request already sent to " + friendName, Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        DocumentReference friendDocRef = usersCollectionRef.document(friendId);
+
+                        friendDocRef.update("friendRequests", FieldValue.arrayUnion(userId))
+                                .addOnSuccessListener(aVoid -> Toast.makeText(PersonalArea.this, "Friend request sent to " + friendUsername, Toast.LENGTH_SHORT).show())
+                                .addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Failed to send friend request", Toast.LENGTH_SHORT).show());
                     } else {
-                        Toast.makeText(PersonalArea.this, "User not found.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PersonalArea.this, "User not found", Toast.LENGTH_SHORT).show();
                     }
-                });
+                })
+                .addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Error searching for user", Toast.LENGTH_SHORT).show());
     }
 
     private void showPendingRequestsPopup() {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View pendingRequestsView = inflater.inflate(R.layout.popup_pending_requests, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.popup_pending_requests, null);
+        builder.setView(dialogView);
 
-        final LinearLayout pendingRequestsList = pendingRequestsView.findViewById(R.id.pendingRequestsList);
+        final LinearLayout pendingRequestsContainer = dialogView.findViewById(R.id.pendingRequestsContainer);
 
-        // Retrieve pending requests
-        fstore.collection("friend_requests").document(userId).collection("requests")
-                .whereEqualTo("status", "pending")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        List<DocumentSnapshot> requests = task.getResult().getDocuments();
-                        for (DocumentSnapshot request : requests) {
-                            String fromUsername = request.getString("fromUsername");
-                            String requestId = request.getId();
-                            View requestItemView = inflater.inflate(R.layout.pending_request_item, null);
-                            TextView requestTextView = requestItemView.findViewById(R.id.requestTextView);
-                            Button acceptButton = requestItemView.findViewById(R.id.acceptButton);
-                            Button rejectButton = requestItemView.findViewById(R.id.rejectButton);
+        builder.setTitle("Pending Friend Requests")
+                .setPositiveButton("Close", null);
 
-                            requestTextView.setText("Pending Request: " + fromUsername);
+        AlertDialog dialog = builder.create();
+        dialog.show();
 
-                            acceptButton.setOnClickListener(v -> handleFriendRequest(requestId, true));
-                            rejectButton.setOnClickListener(v -> handleFriendRequest(requestId, false));
+        DocumentReference userDocRef = fstore.collection("users").document(userId);
+        userDocRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                List<String> friendRequests = (List<String>) documentSnapshot.get("friendRequests");
+                if (friendRequests != null && !friendRequests.isEmpty()) {
+                    for (String requestId : friendRequests) {
+                        fstore.collection("users").document(requestId).get().addOnSuccessListener(friendSnapshot -> {
+                            if (friendSnapshot.exists()) {
+                                String requestUsername = friendSnapshot.getString("username");
 
-                            pendingRequestsList.addView(requestItemView);
-                        }
-                    } else {
-                        Toast.makeText(PersonalArea.this, "Failed to load pending requests.", Toast.LENGTH_SHORT).show();
+                                View requestView = inflater.inflate(R.layout.item_pending_request, null);
+                                TextView requestUsernameTextView = requestView.findViewById(R.id.requestUsernameTextView);
+                                Button acceptButton = requestView.findViewById(R.id.acceptButton);
+                                Button declineButton = requestView.findViewById(R.id.declineButton);
+
+                                requestUsernameTextView.setText(requestUsername);
+
+                                acceptButton.setOnClickListener(v -> {
+                                    acceptFriendRequest(requestId, requestView);
+                                });
+
+                                declineButton.setOnClickListener(v -> {
+                                    declineFriendRequest(requestId, requestView);
+                                });
+
+                                pendingRequestsContainer.addView(requestView);
+                            }
+                        });
                     }
-                });
-
-        new AlertDialog.Builder(this)
-                .setView(pendingRequestsView)
-                .setTitle("Pending Requests")
-                .setNegativeButton("Close", null)
-                .create()
-                .show();
+                } else {
+                    TextView noRequestsTextView = new TextView(this);
+                    noRequestsTextView.setText("No pending friend requests");
+                    pendingRequestsContainer.addView(noRequestsTextView);
+                }
+            }
+        });
     }
 
-    private void handleFriendRequest(String requestId, boolean isAccepted) {
-        DocumentReference requestRef = fstore.collection("friend_requests").document(userId).collection("requests").document(requestId);
-        requestRef.update("status", isAccepted ? "accepted" : "rejected")
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        if (isAccepted) {
-                            // Add each other as friends
-                            DocumentReference friendRef = fstore.collection("friends").document(userId).collection("userFriends").document(requestId);
-                            friendRef.set(new HashMap<>());
+    private void acceptFriendRequest(String requestId, View requestView) {
+        DocumentReference userDocRef = fstore.collection("users").document(userId);
+        DocumentReference friendDocRef = fstore.collection("users").document(requestId);
 
-                            DocumentReference myRef = fstore.collection("friends").document(requestId).collection("userFriends").document(userId);
-                            myRef.set(new HashMap<>());
-                        }
-                        Toast.makeText(PersonalArea.this, "Request " + (isAccepted ? "accepted" : "rejected"), Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(PersonalArea.this, "Failed to update request status. Please try again.", Toast.LENGTH_SHORT).show();
-                    }
-                });
+        userDocRef.update("friendsList", FieldValue.arrayUnion(requestId), "friendRequests", FieldValue.arrayRemove(requestId))
+                .addOnSuccessListener(aVoid -> friendDocRef.update("friendsList", FieldValue.arrayUnion(userId))
+                        .addOnSuccessListener(aVoid1 -> {
+                            Toast.makeText(PersonalArea.this, "Friend request accepted", Toast.LENGTH_SHORT).show();
+                            ((LinearLayout) requestView.getParent()).removeView(requestView);
+                            addFriendToList(requestId);
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Failed to accept friend request", Toast.LENGTH_SHORT).show()))
+                .addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Failed to update friend list", Toast.LENGTH_SHORT).show());
     }
 
-    private int calculateAge(int year, int month, int day) {
-        LocalDate birthDate = LocalDate.of(year, month + 1, day); // month is 0-based
-        LocalDate currentDate = LocalDate.now();
-        return Period.between(birthDate, currentDate).getYears();
+    private void declineFriendRequest(String requestId, View requestView) {
+        DocumentReference userDocRef = fstore.collection("users").document(userId);
+        userDocRef.update("friendRequests", FieldValue.arrayRemove(requestId))
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(PersonalArea.this, "Friend request declined", Toast.LENGTH_SHORT).show();
+                    ((LinearLayout) requestView.getParent()).removeView(requestView);
+                })
+                .addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Failed to decline friend request", Toast.LENGTH_SHORT).show());
+    }
+
+    private void addFriendToList(String friendId) {
+        fstore.collection("users").document(friendId).get().addOnSuccessListener(friendSnapshot -> {
+            if (friendSnapshot.exists()) {
+                String friendUsername = friendSnapshot.getString("username");
+                String friendGender = friendSnapshot.getString("gender");
+
+                View friendView = getLayoutInflater().inflate(R.layout.friend_item, friendsListContainer, false);
+                TextView friendUsernameTextView = friendView.findViewById(R.id.friendUsernameTextView);
+                ImageView friendImageView = friendView.findViewById(R.id.friendImageView);
+
+                friendUsernameTextView.setText(friendUsername);
+                if (friendGender != null && friendGender.equalsIgnoreCase("male")) {
+                    friendImageView.setImageResource(R.drawable.person_image);
+                } else {
+                    friendImageView.setImageResource(R.drawable.women);
+                }
+
+                friendsListContainer.addView(friendView);
+            }
+        });
+    }
+
+    private void loadFriends() {
+        DocumentReference userDocRef = fstore.collection("users").document(userId);
+        userDocRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                List<String> friendsList = (List<String>) documentSnapshot.get("friendsList");
+                if (friendsList != null && !friendsList.isEmpty()) {
+                    for (String friendId : friendsList) {
+                        addFriendToList(friendId);
+                    }
+                }
+            }
+        });
     }
 
     private void showDatePickerDialog(final Button setBirthdatebtn) {
-        final Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        final Calendar c = Calendar.getInstance();
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH);
+        int day = c.get(Calendar.DAY_OF_MONTH);
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
-                    public void onDateSet(DatePicker view, int chosenYear, int chosenMonth, int dayOfMonth) {
-                        selectedDate = Calendar.getInstance();
-                        selectedDate.set(chosenYear, chosenMonth, dayOfMonth);
-                        birthdate = dayOfMonth + "/" + (chosenMonth + 1) + "/" + chosenYear;
-                        setBirthdatebtn.setText(birthdate);
+                    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                        setBirthdatebtn.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year);
+                        birthdate = dayOfMonth + "/" + (monthOfYear + 1) + "/" + year;
+                        calculateAge(year, monthOfYear, dayOfMonth);
                     }
                 }, year, month, day);
         datePickerDialog.show();
     }
 
-    private void loadFriends() {
-        fstore.collection("friends").document(userId).collection("userFriends").get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        List<DocumentSnapshot> friends = task.getResult().getDocuments();
-                        for (DocumentSnapshot friendDoc : friends) {
-                            String friendId = friendDoc.getId();
-                            fstore.collection("users").document(friendId).get()
-                                    .addOnCompleteListener(friendTask -> {
-                                        if (friendTask.isSuccessful() && friendTask.getResult() != null) {
-                                            DocumentSnapshot friendData = friendTask.getResult();
-                                            String friendName = friendData.getString("firstName") + " " + friendData.getString("lastName");
-                                            String gender = friendData.getString("gender");
-
-                                            View friendItemView = getLayoutInflater().inflate(R.layout.friend_item, null);
-                                            ImageView friendImageView = friendItemView.findViewById(R.id.friendImage);
-                                            TextView friendNameTextView = friendItemView.findViewById(R.id.friendName);
-
-                                            friendNameTextView.setText(friendName);
-                                            if ("Male".equalsIgnoreCase(gender)) {
-                                                friendImageView.setImageResource(R.drawable.person_image); // Replace with your male image resource
-                                            } else if ("Female".equalsIgnoreCase(gender)) {
-                                                friendImageView.setImageResource(R.drawable.women); // Replace with your female image resource
-                                            }
-
-                                            friendsListContainer.addView(friendItemView);
-                                        }
-                                    });
-                        }
-                    } else {
-                        Toast.makeText(PersonalArea.this, "Failed to load friends.", Toast.LENGTH_SHORT).show();
-                    }
-                });
+    private int calculateAge(int year, int month, int day) {
+        LocalDate birthDate = LocalDate.of(year, month, day);
+        LocalDate currentDate = LocalDate.now();
+        return Period.between(birthDate, currentDate).getYears();
     }
 }
-

@@ -9,12 +9,15 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
+import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
@@ -36,12 +39,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,6 +60,9 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
     private FusedLocationProviderClient fusedLocationProviderClient;
     private GoogleMap myMap;
     private LatLng selectedLocation;
+    private PopupWindow popupWindow;
+    private GoogleMap map;
+    private String typeChosen;
 
     private ImageButton btnRunning, btnBasketball, btnPowerWorkout, btnBicycleRide;
     private Button btnChooseLocation, btnSetWorkout, btnChooseDate, btnChooseTime, btnChooseDuration;
@@ -68,12 +74,14 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
     private ImageButton personal, createWorkout2, scoreboard2, homepage2;
     private Calendar selectedDate;
     private TimePickerDialog timePickerDialog;
+    private View lastSelectedButton = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_workout);
-
+        Log.d("addWorkout", "onCreate started");
+        try{
         // Initialize buttons
         btnRunning = findViewById(R.id.btnRunning);
         btnBasketball = findViewById(R.id.btnBasketball);
@@ -150,26 +158,23 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         userID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         fetchUserDetails();
-        getLastLocationAndInitializeMap();
+        //getLastLocationAndInitializeMap();
+    } catch (Exception e){
+            Log.e("addWorkout", "Error in onCreate: " + e.getMessage());
+
+        }
+
     }
 
+    // Set workout typeChosen
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        if (id == R.id.btnRunning) {
-            tvChosenWorkoutType.setText("Chosen Workout Type: Running");
-            WorkoutType = "run";
-        } else if (id == R.id.btnBasketball) {
-            tvChosenWorkoutType.setText("Chosen Workout Type: Basketball");
-            WorkoutType = "basketball";
-        } else if (id == R.id.btnPowerWorkout) {
-            tvChosenWorkoutType.setText("Chosen Workout Type: Strength Workout");
-            WorkoutType = "power";
-        } else if (id == R.id.btnBicycleRide) {
-            tvChosenWorkoutType.setText("Chosen Workout Type: Bicycle Ride");
-            WorkoutType = "ride";
-        } else if (id == R.id.btnChooseLocation) {
-            getLastLocationAndInitializeMap();
+        if (id == R.id.btnRunning || id == R.id.btnBasketball || id == R.id.btnPowerWorkout || id == R.id.btnBicycleRide) {
+            handleWorkoutTypeSelection(v, id);
+        }
+        else if (id == R.id.btnChooseLocation) {
+            showMapPopup();
         } else if (id == R.id.btnSetWorkout) {
             saveWorkoutToFirestore();
         } else if (id == R.id.btnChooseDate) {
@@ -189,6 +194,72 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         }
     }
 
+    private void handleWorkoutTypeSelection(View v, int id) {
+        // If there was a previously selected button, revert its image to the original
+        if (lastSelectedButton != null) {
+            // Revert the background to the original image of the last selected button
+            if (lastSelectedButton.getId() == R.id.btnRunning) {
+                lastSelectedButton.setBackgroundResource(R.drawable.running);
+            } else if (lastSelectedButton.getId() == R.id.btnBasketball) {
+                lastSelectedButton.setBackgroundResource(R.drawable.player);
+            } else if (lastSelectedButton.getId() == R.id.btnPowerWorkout) {
+                lastSelectedButton.setBackgroundResource(R.drawable.lifting);
+            } else if (lastSelectedButton.getId() == R.id.btnBicycleRide) {
+                lastSelectedButton.setBackgroundResource(R.drawable.ride);
+            }
+        }
+
+        // Apply the semi-transparent overlay to the current button
+        if (id == R.id.btnRunning) {
+            v.setBackgroundResource(R.drawable.semi_transparent_running);
+            tvChosenWorkoutType.setText("Chosen Workout Type: Running");
+            WorkoutType = "run";
+        } else if (id == R.id.btnBasketball) {
+            v.setBackgroundResource(R.drawable.semi_transparent_basketball);
+            tvChosenWorkoutType.setText("Chosen Workout Type: Basketball");
+            WorkoutType = "basketball";
+        } else if (id == R.id.btnPowerWorkout) {
+            v.setBackgroundResource(R.drawable.semi_transparent_powerworkout);
+            tvChosenWorkoutType.setText("Chosen Workout Type: Strength Workout");
+            WorkoutType = "power";
+        } else if (id == R.id.btnBicycleRide) {
+            v.setBackgroundResource(R.drawable.semi_transparent_bicycleride);
+            tvChosenWorkoutType.setText("Chosen Workout Type: Bicycle Ride");
+            WorkoutType = "ride";
+        }
+
+        // Update the last selected button
+        lastSelectedButton = v;
+    }
+
+    private void showMapPopup() {
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.popup_map, null);
+
+        popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, true);
+        popupWindow.showAtLocation(findViewById(R.id.addWorkoutLayout), Gravity.CENTER, 0, 0);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapFragment);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
+
+        Button btnSaveLocation = popupView.findViewById(R.id.btnSaveLocation);
+        btnSaveLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (selectedLocation != null) {
+                    // Handle the selected location (e.g., save it to the workout details)
+                    Toast.makeText(addWorkout.this, "Location saved ", Toast.LENGTH_SHORT).show();
+                    // Dismiss the popup
+                    popupWindow.dismiss();
+                } else {
+                    Toast.makeText(addWorkout.this, "Please select a location", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
     private void fetchUserDetails() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference docRef = db.collection("users").document(userID);
@@ -199,161 +270,91 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                     if (documentSnapshot.exists()) {
                         firstName = documentSnapshot.getString("firstName");
                         lastName = documentSnapshot.getString("lastName");
-                        workoutParticipated = documentSnapshot.getLong("workoutJoined").intValue();
-                        workoutCreated = documentSnapshot.getLong("workoutCreated").intValue();
+                        gender = documentSnapshot.getString("Gender");
+                        Long participated = documentSnapshot.getLong("WorkoutParticipated");
+                        Long created = documentSnapshot.getLong("WorkoutCreated");
+
+                        if (participated != null) {
+                            workoutParticipated = participated.intValue();
+                        } else {
+                            workoutParticipated = 0; // Default value if not available
+                        }
+
+                        if (created != null) {
+                            workoutCreated = created.intValue();
+                        } else {
+                            workoutCreated = 0; // Default value if not available
+                        }
 
                         FullName = firstName + " " + lastName;
+                    } else {
+                        Log.d("addWorkout", "No such document");
                     }
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(addWorkout.this, "Failed to fetch user data", Toast.LENGTH_SHORT).show();
-                    Log.e("Firestore", "Error fetching user data", e);
+                    Log.d("Document", "get failed with ", e);
                 }
             });
         }
     }
 
     private void saveWorkoutToFirestore() {
-        gender = null;
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference docRef = db.collection("workouts").document();
+        Map<String, Object> workout = new HashMap<>();
+        workout.put("FullName", FullName);
+        workout.put("Type", WorkoutType);
+        workout.put("Date", workoutDate);
+        workout.put("Time", workoutTime);
+        workout.put("Location", selectedLocation);
+        workout.put("CreatorID", userID);
+        workout.put("Private", switchPrivateWorkout.isChecked());
+        workout.put("GenderFilter", getSelectedGender());
+        workout.put("AgeFilter", isAgeFiltered ? ageRangeSeekBar.getProgress() : 0);
+        workout.put("Duration", duration);
+        workout.put("Participants", new ArrayList<String>());
+
+        docRef.set(workout).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(addWorkout.this, "Workout saved successfully", Toast.LENGTH_SHORT).show();
+                updateWorkoutCreatedCount();
+                finish();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(addWorkout.this, "Error saving workout", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private String getSelectedGender() {
         int selectedId = radioGroupGender.getCheckedRadioButtonId();
         if (selectedId != -1) {
-            RadioButton selectedRadioButton = findViewById(selectedId);
-            gender = selectedRadioButton.getText().toString();
+            radioButton = findViewById(selectedId);
+            return radioButton.getText().toString();
         }
+        return "All";
+    }
 
-        if (FullName == null) {
-            Toast.makeText(this, "User data not loaded yet, please wait...", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (WorkoutType == null) {
-            Toast.makeText(this, "Please choose a workout type", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (gender == null) {
-            Toast.makeText(this, "Please choose your gender", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (duration == 0) {
-            Toast.makeText(this, "Please choose a workout duration", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (isAgeFiltered && ageRangeTextView.getText().toString().equals("Age range: ")) {
-            Toast.makeText(this, "Please choose minimal age", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Increment workoutParticipated before saving workout data
-        workoutParticipated += 1;
-        workoutCreated += 1;
-
-        Map<String, Object> workoutData = new HashMap<>();
-        workoutData.put("workoutType", WorkoutType);
-        workoutData.put("privateWorkout", switchPrivateWorkout.isChecked());
-        workoutData.put("date", workoutDate);
-        workoutData.put("time", workoutTime);
-        workoutData.put("duration", duration);
-        workoutData.put("ageFiltered", isAgeFiltered);
-        workoutData.put("creatorId", userID);
-        workoutData.put("Participants", 1);
-        workoutData.put("creatorName", FullName);
-        workoutData.put("gender", gender);
-        if (isAgeFiltered) {
-            workoutData.put("minimumAge", ageRangeTextView.getText().toString().replace("Age range: ", ""));
-        }
-
+    private void updateWorkoutCreatedCount() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        // Update the user's workoutParticipated count first
-        DocumentReference userDocRef = db.collection("users").document(userID);
-        userDocRef.update("workoutJoined", workoutParticipated);
-        userDocRef.update("workoutCreated", workoutCreated)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        // Now add the workout data
-                        db.collection("workouts")
-                                .add(workoutData)
-                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                    @Override
-                                    public void onSuccess(DocumentReference documentReference) {
-                                        Toast.makeText(addWorkout.this, "Workout added successfully", Toast.LENGTH_SHORT).show();
-                                        Intent intent = new Intent(addWorkout.this, HomePage.class);
-                                        startActivity(intent);
-                                        finish();
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Toast.makeText(addWorkout.this, "Error adding workout", Toast.LENGTH_SHORT).show();
-                                        Log.e("Firestore", "Error adding workout", e);
-                                    }
-                                });
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(addWorkout.this, "Error updating workout count", Toast.LENGTH_SHORT).show();
-                        Log.e("Firestore", "Error updating workout count", e);
-                    }
-                });
-    }
-
-    private void getLastLocationAndInitializeMap() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_PERMISSION_CODE);
-            return;
-        }
-        Task<Location> task = fusedLocationProviderClient.getLastLocation();
-        task.addOnSuccessListener(new OnSuccessListener<Location>() {
+        DocumentReference docRef = db.collection("users").document(userID);
+        workoutCreated += 1;
+        docRef.update("WorkoutCreated", workoutCreated).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
-            public void onSuccess(Location location) {
-                if (location != null) {
-                    currentLocation = location;
-                    SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapFrame);
-                    if (mapFragment != null) {
-                        mapFragment.getMapAsync(new OnMapReadyCallback() {
-                            @Override
-                            public void onMapReady(@NonNull GoogleMap googleMap) {
-                                myMap = googleMap;
-                                LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-                                myMap.addMarker(new MarkerOptions().position(currentLatLng).title("My Location"));
-                                myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
-                            }
-                        });
-                    }
-                }
+            public void onSuccess(Void aVoid) {
+                Log.d("Document", "WorkoutCreated updated successfully");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d("Document", "Error updating WorkoutCreated", e);
             }
         });
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        myMap = googleMap;
-        myMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
-                myMap.clear();
-                myMap.addMarker(new MarkerOptions().position(latLng).title("Selected Location"));
-                selectedLocation = latLng;
-            }
-        });
-
-        if (currentLocation != null) {
-            LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-            myMap.addMarker(new MarkerOptions().position(currentLatLng).title("My Location"));
-            myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f));
-        } else {
-            getLastLocationAndInitializeMap();
-        }
     }
 
     private void showDatePickerDialog() {
@@ -361,32 +362,22 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
-
         DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
-                    public void onDateSet(DatePicker view, int chosenyear, int chosenmonth, int dayOfMonth) {
-                        selectedDate = Calendar.getInstance();
-                        selectedDate.set(chosenyear, chosenmonth, dayOfMonth);
-                        workoutDate = dayOfMonth + "/" + (chosenmonth + 1) + "/" + chosenyear;
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        workoutDate = dayOfMonth + "/" + (month + 1) + "/" + year;
                     }
                 }, year, month, day);
         datePickerDialog.show();
     }
 
     private void showTimePicker() {
-        Calendar calendar = Calendar.getInstance();
-        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
-        int currentMinute = calendar.get(Calendar.MINUTE);
-
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
-                new TimePickerDialog.OnTimeSetListener() {
-                    @Override
-                    public void onTimeSet(android.widget.TimePicker view, int hourOfDay, int minute) {
-                        workoutTime = hourOfDay + ":" + (minute < 10 ? "0" + minute : minute);
-                        Toast.makeText(addWorkout.this, "Chosen Time: " + workoutTime, Toast.LENGTH_SHORT).show();
-                    }
-                }, currentHour, currentMinute, true);
+        final Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+        timePickerDialog = new TimePickerDialog(addWorkout.this,
+                (view, hourOfDay, minuteOfHour) -> workoutTime = hourOfDay + ":" + minuteOfHour, hour, minute, true);
         timePickerDialog.show();
     }
 
@@ -427,4 +418,55 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
 
         dialog.show();
     }
+
+
+    /*private void getLastLocationAndInitializeMap() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_PERMISSION_CODE);
+            return;
+        }
+
+        Task<Location> task = fusedLocationProviderClient.getLastLocation();
+        task.addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    currentLocation = location;
+                    SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapFragment);
+                    if (mapFragment != null) {
+                        mapFragment.getMapAsync(addWorkout.this);
+                    }
+                    else {
+                    Log.e("addWorkout", "Map fragment is null");
+                    Toast.makeText(addWorkout.this, "Map fragment is null", Toast.LENGTH_SHORT).show();}
+                    }
+            }
+        });
+    } */
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        map = googleMap;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_PERMISSION_CODE);
+            return;
+        }
+
+        map.setMyLocationEnabled(true);
+
+        if (currentLocation != null) {
+            LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        }
+
+        map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                map.clear();
+                map.addMarker(new MarkerOptions().position(latLng));
+                selectedLocation = latLng;
+            }
+        });
+    }
+
 }

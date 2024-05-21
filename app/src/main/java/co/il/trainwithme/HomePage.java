@@ -6,14 +6,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
-import android.widget.ArrayAdapter;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +44,11 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     private FirebaseUser currentUser;
     private FirebaseFirestore fStore;
 
+    private boolean filterPrivate;
+    private String filterGender;
+    private boolean filterAgeOn;
+    private int filterAgeRange;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +75,12 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         fStore = FirebaseFirestore.getInstance();
         currentUser = fAuth.getCurrentUser();
 
+        // Initialize filters
+        filterPrivate = false;
+        filterGender = "Any";
+        filterAgeOn = false;
+        filterAgeRange = 0;
+
         // Check if email is verified
         if (currentUser != null && !currentUser.isEmailVerified()) {
             emailNotVerifiedText.setVisibility(View.VISIBLE);
@@ -95,13 +105,42 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
 
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Map<String, Object> workout = document.getData();
-                                createWorkoutButton(workoutListContainer, workout);
+
+                                if (applyFiltersToWorkout(workout)) {
+                                    createWorkoutButton(workoutListContainer, workout);
+                                }
                             }
                         } else {
                             Toast.makeText(HomePage.this, "Failed to load workouts.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
+    }
+
+    private boolean applyFiltersToWorkout(Map<String, Object> workout) {
+        // Apply the filters to each workout and return true if the workout matches the filters
+
+        if (filterPrivate && !(boolean) workout.get("privateWorkout")) {
+            return false;
+        }
+
+        if (!filterGender.equals("Any") && !filterGender.equals(workout.get("gender"))) { // gender doesn't match
+            return false;
+        }
+
+        if (filterAgeOn) { // age filter is on
+            if (workout.get("minimumAge") != null) {
+                int minimumAge = ((Long) workout.get("minimumAge")).intValue(); // Firestore returns numbers as Long
+                if (filterAgeRange < minimumAge) { // user's age range is less than the workout's minimum age
+                    return false;
+                }
+            } else {
+                // If the workout does not have a minimumAge field, we consider it not matching the filter
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void createWorkoutButton(LinearLayout container, Map<String, Object> workout) {
@@ -117,19 +156,19 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         ImageView workoutImage = workoutButton.findViewById(R.id.workoutImage);
 
         workoutCreator.setText("Created by: " + (String) workout.get("creatorName"));
-        workoutDate.setText("scheduled on: " + (String) workout.get("date") );
-        workoutTime.setText("at: " + (String) workout.get("time"));
+        workoutDate.setText("Scheduled on: " + (String) workout.get("date"));
+        workoutTime.setText("At: " + (String) workout.get("time"));
         workoutDuration.setText(workout.get("duration") + " mins");
         participantCount.setText(workout.get("Participants") + " participants");
         String workoutType = (String) workout.get("workoutType");
 
-        if(Objects.equals(workoutType, "power")) {
+        if (Objects.equals(workoutType, "power")) {
             workoutImage.setImageResource(R.drawable.lifting);
-        } else if(Objects.equals(workoutType, "ride")) {
+        } else if (Objects.equals(workoutType, "ride")) {
             workoutImage.setImageResource(R.drawable.ride);
-        } else if(Objects.equals(workoutType, "run")) {
+        } else if (Objects.equals(workoutType, "run")) {
             workoutImage.setImageResource(R.drawable.running);
-        } else if(Objects.equals(workoutType, "basketball")) {
+        } else if (Objects.equals(workoutType, "basketball")) {
             workoutImage.setImageResource(R.drawable.player);
         }
 
@@ -160,19 +199,19 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         Button joinButton = dialogView.findViewById(R.id.joinButton);
 
         workoutCreator.setText("Created by: " + (String) workout.get("creatorName"));
-        workoutDate.setText("scheduled on: " + (String) workout.get("date") );
-        workoutTime.setText("at: " + (String) workout.get("time"));
+        workoutDate.setText("Scheduled on: " + (String) workout.get("date"));
+        workoutTime.setText("At: " + (String) workout.get("time"));
         workoutDuration.setText(workout.get("duration") + " mins");
         participantCount.setText(workout.get("Participants") + " participants");
         String workoutType = (String) workout.get("workoutType");
 
-        if(Objects.equals(workoutType, "power")) {
+        if (Objects.equals(workoutType, "power")) {
             workoutImage.setImageResource(R.drawable.lifting);
-        } else if(Objects.equals(workoutType, "ride")) {
+        } else if (Objects.equals(workoutType, "ride")) {
             workoutImage.setImageResource(R.drawable.ride);
-        } else if(Objects.equals(workoutType, "run")) {
+        } else if (Objects.equals(workoutType, "run")) {
             workoutImage.setImageResource(R.drawable.running);
-        } else if(Objects.equals(workoutType, "basketball")) {
+        } else if (Objects.equals(workoutType, "basketball")) {
             workoutImage.setImageResource(R.drawable.player);
         }
 
@@ -201,48 +240,32 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         if (v == addWorkoutButton) {
             Intent intent = new Intent(HomePage.this, addWorkout.class);
             startActivity(intent);
-            finish();
         } else if (v == personalAreaButton) {
             Intent intent = new Intent(HomePage.this, PersonalArea.class);
             startActivity(intent);
-            finish();
         } else if (v == ScoreBoardButton) {
             Intent intent = new Intent(HomePage.this, ScoreBoard.class);
             startActivity(intent);
-            finish();
         } else if (v == homeButton) {
             Intent intent = new Intent(HomePage.this, HomePage.class);
             startActivity(intent);
+        } else if (v == logoutButton) {
+            FirebaseAuth.getInstance().signOut();
+            startActivity(new Intent(getApplicationContext(), MainActivity.class));
             finish();
         } else if (v == verifyNowButton) {
-            sendVerificationEmail();
+            currentUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(HomePage.this, "Verification email sent.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(HomePage.this, "Failed to send verification email.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
         } else if (v == filterButton) {
             showFilterDialog();
-        } else if (v == logoutButton) {
-            logout();
-        }
-    }
-
-    private void logout() {
-        FirebaseAuth.getInstance().signOut();
-        Intent intent = new Intent(HomePage.this, MainActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    private void sendVerificationEmail() {
-        if (currentUser != null) {
-            currentUser.sendEmailVerification()
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(HomePage.this, "Verification email sent.", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(HomePage.this, "Failed to send verification email.", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
         }
     }
 
@@ -252,30 +275,30 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         View dialogView = inflater.inflate(R.layout.dialog_filters, null);
         builder.setView(dialogView);
 
-        // Initialize the filters
         Switch privateWorkoutSwitch = dialogView.findViewById(R.id.privateWorkoutSwitch);
-        Spinner genderSpinner = dialogView.findViewById(R.id.genderSpinner);
         Switch ageFilterSwitch = dialogView.findViewById(R.id.ageFilterSwitch);
         SeekBar ageRangeSeekBar = dialogView.findViewById(R.id.ageRangeSeekBar);
         TextView ageRangeTextView = dialogView.findViewById(R.id.ageRangeTextView);
+        Spinner genderSpinner = dialogView.findViewById(R.id.genderSpinner);
 
-        // Populate gender spinner
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.gender_array, android.R.layout.simple_spinner_item);
+        // Set up gender spinner
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.gender_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(adapter);
 
-        // Initialize age range
-        ageRangeSeekBar.setEnabled(false);
-        ageFilterSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                ageRangeSeekBar.setEnabled(isChecked);
-            }
-        });
+        // Load current filter settings
+        privateWorkoutSwitch.setChecked(filterPrivate);
+        ageFilterSwitch.setChecked(filterAgeOn);
+        ageRangeSeekBar.setProgress(filterAgeRange);
+        ageRangeTextView.setText("Age range: " + filterAgeRange + "+");
+        genderSpinner.setSelection(adapter.getPosition(filterGender));
+
         ageRangeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 ageRangeTextView.setText("Age range: " + progress + "+");
+                filterAgeRange = progress; // Correctly set filterAgeRange here
             }
 
             @Override
@@ -291,15 +314,17 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             @Override
             public void onClick(DialogInterface dialog, int id) {
                 // Save filter settings and apply them
-                boolean isPrivate = privateWorkoutSwitch.isChecked();
-                String gender = genderSpinner.getSelectedItem().toString();
-                boolean ageFilterOn = ageFilterSwitch.isChecked();
-                int ageRange = ageRangeSeekBar.getProgress();
+                filterPrivate = privateWorkoutSwitch.isChecked();
+                filterGender = genderSpinner.getSelectedItem().toString();
+                filterAgeOn = ageFilterSwitch.isChecked();
+                // filterAgeRange is already set correctly by the SeekBar listener
 
-                applyFilters(isPrivate, gender, ageFilterOn, ageRange);
+                loadWorkouts();
             }
         });
+
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
             public void onClick(DialogInterface dialog, int id) {
                 dialog.cancel();
             }
@@ -307,13 +332,5 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
 
         AlertDialog dialog = builder.create();
         dialog.show();
-    }
-
-    private void applyFilters(boolean isPrivate, String gender, boolean ageFilterOn, int ageRange) {
-        // Logic to filter the workout list based on the selected filters
-        // Update the workout list in the ScrollView accordingly
-        Toast.makeText(this, "Filters applied: Private=" + isPrivate + ", Gender=" + gender + ", Age=" + (ageFilterOn ? ageRange + "+" : "Any"), Toast.LENGTH_SHORT).show();
-        // Example logic (replace with actual filtering logic):
-        // For demonstration, we are just showing a toast message
     }
 }
