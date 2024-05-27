@@ -6,12 +6,6 @@
     android:background="#9BC7D6"
     android:padding="16dp">
 
-    <Switch
-        android:id="@+id/privateWorkoutSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Private Workouts" />
-
     <Spinner
         android:id="@+id/genderSpinner"
         android:layout_width="match_parent"

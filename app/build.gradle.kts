@@ -36,6 +36,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation ("org.mindrot:jbcrypt:0.4")
     implementation(files("libs\\json-simple-1.1.1.jar"))
     implementation("com.google.firebase:firebase-auth:23.0.0")
     implementation("com.google.firebase:firebase-firestore:25.0.0")

@@ -30,6 +30,8 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +45,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
     private RadioGroup radioGroupGender;
     private RadioButton radioButton;
     private FirebaseAuth fAuth;
-    private String gender, userID, birthdate;
+    private String gender, userID, birthdate, hashedpassword;
     private FirebaseFirestore fstore;
 
     @Override
@@ -160,6 +162,13 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
             return;
         }
 
+
+        if (selectedDate != null && selectedDate.after(Calendar.getInstance())) {
+            Toast.makeText(this, "Birthdate cannot be in the future.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
         fstore.collection("users")
                 .whereEqualTo("username", username)
                 .get()
@@ -173,7 +182,6 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
                                 createFirebaseUser(username, email, password, firstName, lastName, birthdate, gender);
                             }
                         } else {
-                            createFirebaseUser(username, email, password, firstName, lastName, birthdate, gender);
                             Log.d("TAG", "Error 5555: " + task.getException().getMessage());
                             Toast.makeText(SignUp.this, "Error checking username availability: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                         }
@@ -200,6 +208,8 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
                         }
                     });
 
+                    hashedpassword = hashPassword(password);
+
                     userID = fAuth.getCurrentUser().getUid();
                     DocumentReference documentReference = fstore.collection("users").document(userID);
                     Map<String, Object> user = new HashMap<>();
@@ -208,7 +218,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
                     user.put("lastName", lastName);
                     user.put("birthdate", birthdate);
                     user.put("email", email);
-                    user.put("password", password);
+                    user.put("password", hashedpassword);
                     user.put("gender", gender);
                     user.put("workoutJoined", workoutJoined);
                     user.put("workoutCreated", 0);
@@ -259,5 +269,8 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
                     }
                 }, year, month, day);
         datePickerDialog.show();
+    }
+    private String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 }

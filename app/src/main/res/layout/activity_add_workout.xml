@@ -204,7 +204,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Gender"
+                    android:text="Gender Filter(optional)"
                     android:textColor="@color/black"
                     android:textSize="18sp"
                     android:layout_marginTop="16dp" />
@@ -215,22 +215,16 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
                     <RadioButton
-                        android:id="@+id/radioButtonAll"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="All" />
-
-                    <RadioButton
                         android:id="@+id/radioButtonMale"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Male" />
+                        android:text="Male Only" />
 
                     <RadioButton
                         android:id="@+id/radioButtonFemale"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Female" />
+                        android:text="Female Only" />
                 </RadioGroup>
             </LinearLayout>
 
@@ -254,7 +248,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="#D9D9D9"
-        android:padding="8dp"
+        android:padding="6dp"
         android:layout_marginBottom="16dp"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintStart_toStartOf="parent"

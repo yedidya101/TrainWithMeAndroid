@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView ForgotPassword, SignUpText, SignUplink;
     EditText etusername, etpassword;
     Button btnLogin;
+    String hashedPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void loginUser() {
         String email = etusername.getText().toString().trim();
         String password = etpassword.getText().toString().trim();
+
 
         if (TextUtils.isEmpty(email)) {
             Toast.makeText(this, "Email is required.", Toast.LENGTH_SHORT).show();

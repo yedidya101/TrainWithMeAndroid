@@ -46,6 +46,9 @@ public class ScoreBoard extends AppCompatActivity implements View.OnClickListene
         scoreboard3.setOnClickListener(this);
         homepage3.setOnClickListener(this);
 
+
+        scoreboard3.setBackgroundResource(R.drawable.scoreboardchosen);
+
         monthTextView = findViewById(R.id.month);
         setMonthText();
 

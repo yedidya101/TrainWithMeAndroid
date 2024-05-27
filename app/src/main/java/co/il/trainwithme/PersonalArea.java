@@ -46,7 +46,7 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
     private FirebaseAuth fAuth;
     private FirebaseFirestore fstore;
     private Button changeInfoButton, sendFriendRequestButton, pendingRequestsButton;
-    private ImageButton HomePageButton, ScoreBoardButton, addWorkoutButton;
+    private ImageButton HomePageButton, ScoreBoardButton, addWorkoutButton, personalAreaButton;
     private LinearLayout friendsListContainer;
 
 
@@ -61,6 +61,7 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         age_personal = findViewById(R.id.age_personal);
         gender_personal = findViewById(R.id.gender_personal);
         username = findViewById(R.id.username);
+        personalAreaButton = findViewById(R.id.personal);
 
         workoutsCreated = findViewById(R.id.workoutsCreated);
         workoutsJoined = findViewById(R.id.workoutsParticipated);
@@ -80,6 +81,10 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         addWorkoutButton.setOnClickListener(this);
         HomePageButton.setOnClickListener(this);
         ScoreBoardButton.setOnClickListener(this);
+        personalAreaButton.setOnClickListener(this);
+
+        personalAreaButton.setBackgroundResource(R.drawable.personalareachosen);
+
 
         friendsListContainer = findViewById(R.id.friendsListContainer);
 
@@ -265,7 +270,11 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
     }
 
     private void sendFriendRequest(String friendUsername) {
-        DocumentReference userDocRef = fstore.collection("users").document(userId);
+        if (friendUsername.equals(pUsername)) {
+            Toast.makeText(PersonalArea.this, "You cannot send a friend request to yourself.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         CollectionReference usersCollectionRef = fstore.collection("users");
 
         usersCollectionRef.whereEqualTo("username", friendUsername).get()
@@ -274,18 +283,33 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                     if (!queryDocumentSnapshots.isEmpty()) {
                         DocumentSnapshot friendSnapshot = queryDocumentSnapshots.getDocuments().get(0);
                         String friendId = friendSnapshot.getId();
-
                         DocumentReference friendDocRef = usersCollectionRef.document(friendId);
 
-                        friendDocRef.update("friendRequests", FieldValue.arrayUnion(userId))
-                                .addOnSuccessListener(aVoid -> Toast.makeText(PersonalArea.this, "Friend request sent to " + friendUsername, Toast.LENGTH_SHORT).show())
-                                .addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Failed to send friend request", Toast.LENGTH_SHORT).show());
+                        // Check if the friend request already exists or they are already friends
+                        friendDocRef.get().addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                List<String> friendRequests = (List<String>) documentSnapshot.get("friendRequests");
+                                List<String> friendsList = (List<String>) documentSnapshot.get("friendsList");
+
+                                if (friendRequests != null && friendRequests.contains(userId)) {
+                                    Toast.makeText(PersonalArea.this, "Friend request already sent.", Toast.LENGTH_SHORT).show();
+                                } else if (friendsList != null && friendsList.contains(userId)) {
+                                    Toast.makeText(PersonalArea.this, "You are already friends.", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    // Send the friend request
+                                    friendDocRef.update("friendRequests", FieldValue.arrayUnion(userId))
+                                            .addOnSuccessListener(aVoid -> Toast.makeText(PersonalArea.this, "Friend request sent to " + friendUsername, Toast.LENGTH_SHORT).show())
+                                            .addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Failed to send friend request", Toast.LENGTH_SHORT).show());
+                                }
+                            }
+                        }).addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Error checking friend requests", Toast.LENGTH_SHORT).show());
                     } else {
                         Toast.makeText(PersonalArea.this, "User not found", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(e -> Toast.makeText(PersonalArea.this, "Error searching for user", Toast.LENGTH_SHORT).show());
     }
+
 
     private void showPendingRequestsPopup() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
