@@ -538,6 +538,9 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                 Address address = addresses.get(0);
                 city = address.getLocality();
                 // You can use the city, region, and country as needed
+                if(city == null) {
+                    city = "unidentified location";
+                }
                 Toast.makeText(this, "Selected Location: " + city, Toast.LENGTH_SHORT).show();
             } else {
                 city = "unidentified location";

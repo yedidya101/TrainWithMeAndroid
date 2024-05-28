@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "459667570351",
+    "project_id": "trainwithme-d7247",
+    "storage_bucket": "trainwithme-d7247.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:459667570351:android:cf4f4456ddd41c51dede5a",
+        "android_client_info": {
+          "package_name": "co.il.trainwithme"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQvRVkxI-XExv_JQb74XnCiSobfj2R9z0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

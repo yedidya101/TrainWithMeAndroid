@@ -66,6 +66,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     private double latitude, longitude;
     private HashMap <Double, String> location;
     private Long participated;
+    private Boolean isFriend = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,10 +131,17 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Map<String, Object> workout = document.getData();
 
-                                if(IsWorkoutQualified(workout, userGender)) { // load
-                                    if (applyFiltersToWorkout(workout)) {
-                                        createWorkoutButton(workoutListContainer, workout);
-                                    }                                }
+                                // Check if the workout is qualified
+                                IsWorkoutQualified(workout, userGender, new IsWorkoutQualifiedCallback() {
+                                    @Override
+                                    public void onResult(boolean isQualified) {
+                                        if (isQualified) { //the user is qualified by the creator filters
+                                            if (applyFiltersToWorkout(workout)) { // check if the user put filter to show the workouts he want
+                                                runOnUiThread(() -> createWorkoutButton(workoutListContainer, workout));
+                                            }
+                                        }
+                                    }
+                                });
                             }
                         } else {
                             Toast.makeText(HomePage.this, "Failed to load workouts.", Toast.LENGTH_SHORT).show();
@@ -141,6 +149,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                     }
                 });
     }
+
 
     private boolean applyFiltersToWorkout(Map<String, Object> workout) { // Apply filters on aviable workouts in homepage
         // Apply the filters to each workout and return true if the workout matches the filters
@@ -167,6 +176,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     private void createWorkoutButton(LinearLayout container, Map<String, Object> workout) {
         LayoutInflater inflater = LayoutInflater.from(this);
         View workoutButton = inflater.inflate(R.layout.workout_button, container, false);
+        isFriend = false; //reset the Friend checking for the next workout if its private
 
         // Populate workout button with data
         TextView workoutDate = workoutButton.findViewById(R.id.workoutDate);
@@ -176,7 +186,12 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         TextView participantCount = workoutButton.findViewById(R.id.participantCount);
         TextView city = workoutButton.findViewById(R.id.cityName);
         ImageView workoutImage = workoutButton.findViewById(R.id.workoutImage);
+        TextView workoutfilters = workoutButton.findViewById(R.id.workoutFilters);
 
+        String Filters = getworkoutfilters(workout);
+        if (!Filters.equals("")) {
+            workoutfilters.setText(Filters);
+        }
         city.setText((String) workout.get("City"));
         workoutCreator.setText("Created by: " + (String) workout.get("FullName"));
         workoutDate.setText("Scheduled on: " + (String) workout.get("Date"));
@@ -220,9 +235,15 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         TextView workoutTime = dialogView.findViewById(R.id.workoutTime);
         TextView workoutDuration = dialogView.findViewById(R.id.workoutDuration);
         TextView participantCount = dialogView.findViewById(R.id.participantCount);
+        TextView filtersPopup = dialogView.findViewById(R.id.workoutFiltersPopup);
         ImageView workoutImage = dialogView.findViewById(R.id.workoutImage);
         Button joinButton = dialogView.findViewById(R.id.joinButton);
         LinearLayout participantsList = dialogView.findViewById(R.id.participantsList);
+
+        String Filters = getworkoutfilters(workout);
+        if (!Filters.equals("")) {
+            filtersPopup.setText(Filters);
+        }
 
         // Set workout details
         cityPopup.setText((String) workout.get("City"));
@@ -619,38 +640,90 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
 
 
 
-    private boolean IsWorkoutQualified(Map<String, Object> workout, String userGender) { // check if user stands in the creator filters
-        // Apply the filters to each workout and return true if the workout matches the filters
+    private void IsWorkoutQualified(Map<String, Object> workout, String userGender, IsWorkoutQualifiedCallback callback) {
         int index;
-        String WorkoutGender ="";
-        if(workout.get("GenderFilter") != null) {
-            Log.d("workout.get(GenderFilter)", "workout.get(GenderFilter): " + workout.get("GenderFilter"));
+        String WorkoutGender = "";
+        String creatorId = (String) workout.get("CreatorID");
+        boolean workoutPrivate = (boolean) workout.get("Private");
+        String myId = currentUser.getUid();
+
+        // Check gender filter
+        if (workout.get("GenderFilter") != null) {
             String WorkoutGenderfullParse = (String) workout.get("GenderFilter");
-            if(!Objects.equals(WorkoutGenderfullParse, "All")){
-             index = WorkoutGenderfullParse.indexOf(' ');
-             WorkoutGender = WorkoutGenderfullParse.substring(0, index); // remove the word only after the gender.
+            if (!Objects.equals(WorkoutGenderfullParse, "All")) {
+                index = WorkoutGenderfullParse.indexOf(' ');
+                WorkoutGender = WorkoutGenderfullParse.substring(0, index); // remove the word only after the gender.
             }
-            Log.d("workout.get(GenderFilter)", "ALL is good " + WorkoutGender);
             if (!userGender.equals(WorkoutGender)) { // gender doesn't match
-                    if (!workout.get("GenderFilter").equals("All")) {
-                        return false;
-                    }
-                } //handle gender filter that the creator set.
-        }
-         if (workout.get("AgeFilter") != null) {
-            int minimumAge = ((Long) workout.get("AgeFilter")).intValue(); // Firestore returns numbers as Long
-            if(userAge < minimumAge) { // user's age range is less than the workout's minimum age
-                return false;
+                if (!workout.get("GenderFilter").equals("All")) {
+                    callback.onResult(false);
+                    return;
+                }
             }
         }
 
-        return true;
+        // Check age filter
+        if (workout.get("AgeFilter") != null) {
+            int minimumAge = ((Long) workout.get("AgeFilter")).intValue(); // Firestore returns numbers as Long
+            if (userAge < minimumAge) { // user's age range is less than the workout's minimum age
+                callback.onResult(false);
+                return;
+            }
+        }
+
+        // Check if the workout is private and if the user is a friend
+        if (workoutPrivate && !creatorId.equals(myId)) {
+            DocumentReference userDocRef = fStore.collection("users").document(creatorId);
+            userDocRef.get().addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    List<String> friendsList = (List<String>) documentSnapshot.get("friendsList");
+                    boolean isFriend = false;
+                    if (friendsList != null && !friendsList.isEmpty()) {
+                        for (String friendId : friendsList) {
+                            if (friendId.equals(myId)) {
+                                isFriend = true;
+                                break;
+                            }
+                        }
+                    }
+                    callback.onResult(isFriend);
+                } else {
+                    callback.onResult(false);
+                }
+            }).addOnFailureListener(e -> {
+                callback.onResult(false);
+            });
+        } else {
+            callback.onResult(true);
+        }
     }
+
+    public interface IsWorkoutQualifiedCallback {
+        void onResult(boolean isQualified);
+    }
+
+
     private int calculateAge(int year, int month, int day) {
         LocalDate birthDate = LocalDate.of(year, month, day);
         LocalDate currentDate = LocalDate.now();
         return Period.between(birthDate, currentDate).getYears();
     }
-
+    private String getworkoutfilters(Map<String, Object> workout) {
+        String Filters = "";
+        boolean Privateworkout = (boolean) workout.get("Private");
+        int minimumage = ((Long) workout.get("AgeFilter")).intValue();
+        if(Privateworkout) {
+            Filters = Filters + "Private Workout";
+        }
+        if (workout.get("GenderFilter") != null && !workout.get("GenderFilter").equals("All")) {
+            Filters = Filters + " " +"(" + workout.get("GenderFilter") + ")";
+        }
+        if (workout.get("AgeFilter") != null) {
+            if(!(minimumage == 0)) {
+                Filters = Filters + " " + "Above age:" + " " + workout.get("AgeFilter");
+            }
+        }
+        return Filters;
+    }
 
 }
