@@ -136,6 +136,10 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
+            isAgeFiltered = false;
+            ageRangeTextView.setVisibility(View.GONE);
+            ageRangeSeekBar.setVisibility(View.GONE); //set in the start that the age filter is off
+
         // Setup age filter functionality
         ageFilterSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
@@ -251,9 +255,13 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         popupWindow.showAtLocation(findViewById(R.id.addWorkoutLayout), Gravity.CENTER, 0, 0);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapFragment);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
+        if (mapFragment == null) {
+            mapFragment = SupportMapFragment.newInstance();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.mapFragment, mapFragment)
+                    .commit();
         }
+        mapFragment.getMapAsync(this);
 
         Button btnSaveLocation = popupView.findViewById(R.id.btnSaveLocation);
         btnSaveLocation.setOnClickListener(new View.OnClickListener() {
@@ -264,12 +272,21 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                     Toast.makeText(addWorkout.this, "Location saved ", Toast.LENGTH_SHORT).show();
                     // Dismiss the popup
                     popupWindow.dismiss();
+                    cleanupMapFragment();
                 } else {
                     Toast.makeText(addWorkout.this, "Please select a location", Toast.LENGTH_SHORT).show();
                 }
             }
         });
+
+        popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                cleanupMapFragment();
+            }
+        });
     }
+
 
     private void fetchUserDetails() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -282,7 +299,8 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                         username = documentSnapshot.getString("username");
                         firstName = documentSnapshot.getString("firstName");
                         lastName = documentSnapshot.getString("lastName");
-                        gender = documentSnapshot.getString("Gender");
+                        gender = documentSnapshot.getString("gender");
+                        Log.d("Document", "gender: " + gender);
                         Long participated = documentSnapshot.getLong("WorkoutParticipated");
                         Long created = documentSnapshot.getLong("WorkoutCreated");
 
@@ -352,6 +370,9 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         }
 
         else if (selectedDate != null && selectedDate.before(Calendar.getInstance())) {
+            if(selectedDate.equals(Calendar.getInstance())){ // check if the chosen date is today
+
+            }
             Toast.makeText(this, "Workout cannot be in the past.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -430,6 +451,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                     @Override
                     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                         selectedDate = Calendar.getInstance();
+                        selectedDate.set(year, month, dayOfMonth);
                         workoutDate = dayOfMonth + "/" + (month + 1) + "/" + year;
                     }
                 }, year, month, day);
@@ -515,8 +537,6 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
             if (addresses != null && !addresses.isEmpty()) {
                 Address address = addresses.get(0);
                 city = address.getLocality();
-
-
                 // You can use the city, region, and country as needed
                 Toast.makeText(this, "Selected Location: " + city, Toast.LENGTH_SHORT).show();
             } else {
@@ -526,6 +546,14 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Geocoder service not available", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void cleanupMapFragment() {
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapFragment);
+        if (mapFragment != null) {
+            getSupportFragmentManager().beginTransaction()
+                    .remove(mapFragment)
+                    .commitAllowingStateLoss();
         }
     }
 

@@ -404,11 +404,28 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                 } else {
                     friendImageView.setImageResource(R.drawable.women);
                 }
-
+                friendImageView.setOnClickListener(v -> openChat(friendUsername));
                 friendsListContainer.addView(friendView);
             }
         });
     }
+
+    private void openChat(String friendUsername) {
+        CollectionReference chatsRef = fstore.collection("chats");
+        String chatId = generateChatId(pUsername, friendUsername);
+
+        chatsRef.document(chatId).get().addOnCompleteListener(task -> {
+             Intent intent = new Intent(PersonalArea.this, ChatActivity.class);
+            intent.putExtra("chatId", chatId);
+            intent.putExtra("friendUsername", friendUsername);
+            startActivity(intent);
+        });
+    }
+
+    private String generateChatId(String username1, String username2) {
+        return username1.compareTo(username2) < 0 ? username1 + "_" + username2 : username2 + "_" + username1;
+    }
+
 
     private void loadFriends() {
         DocumentReference userDocRef = fstore.collection("users").document(userId);

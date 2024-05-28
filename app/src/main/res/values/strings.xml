@@ -12,9 +12,13 @@
     <string name="by_joining_you_agree_to_the_terms_and_conditions_and_confirm_that_you_have_read_and_understand_the_privacy_policy">By joining, you agree to the Terms and Conditions and confirm that you have read and understand the Privacy Policy.</string>
     <string name="_01_20_2000">01/20/2000</string>
     <string-array name="gender_array">
-        <item>Any</item>
         <item>Male</item>
         <item>Female</item>
+    </string-array>
+    <string-array name="gender_arrayFilter">
+        <item>Any</item>
+        <item>Male Only</item>
+        <item>Female Only</item>
     </string-array>
 
 </resources>

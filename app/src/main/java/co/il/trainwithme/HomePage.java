@@ -19,7 +19,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,13 +34,13 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,9 +58,9 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     private FirebaseAuth fAuth;
     private FirebaseUser currentUser;
     private FirebaseFirestore fStore;
-    private String filterGender, myUsername;
+    private String filterGender, myUsername, userGender, birthdate;
     private boolean filterAgeOn;
-    private int filterAgeRange;
+    private int filterAgeRange, userAge;
     private GoogleMap mMap;
     private SupportMapFragment mapFragment;
     private double latitude, longitude;
@@ -111,7 +110,12 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         }
 
         // Load workouts from Firestore
-        loadWorkouts();
+        fetchUserGenderAndBirthdate(new GenderFetchCallback() {
+            @Override
+            public void onGenderFetched() {
+                loadWorkouts();
+            }
+        });
     }
 
     private void loadWorkouts() { // Load workouts from Firestore
@@ -126,9 +130,10 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Map<String, Object> workout = document.getData();
 
-                                if (applyFiltersToWorkout(workout)) {
-                                    createWorkoutButton(workoutListContainer, workout);
-                                }
+                                if(IsWorkoutQualified(workout, userGender)) { // load
+                                    if (applyFiltersToWorkout(workout)) {
+                                        createWorkoutButton(workoutListContainer, workout);
+                                    }                                }
                             }
                         } else {
                             Toast.makeText(HomePage.this, "Failed to load workouts.", Toast.LENGTH_SHORT).show();
@@ -139,14 +144,15 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
 
     private boolean applyFiltersToWorkout(Map<String, Object> workout) { // Apply filters on aviable workouts in homepage
         // Apply the filters to each workout and return true if the workout matches the filters
-        if (!filterGender.equals("Any") && !filterGender.equals(workout.get("gender"))) { // gender doesn't match
+        if (!filterGender.equals("Any") && !filterGender.equals(workout.get("GenderFilter"))) { // gender doesn't match
             return false;
         }
 
         if (filterAgeOn) { // age filter is on
             if (workout.get("AgeFilter") != null) {
                 int minimumAge = ((Long) workout.get("AgeFilter")).intValue(); // Firestore returns numbers as Long
-                if(filterAgeRange < minimumAge) { // user's age range is less than the workout's minimum age
+                Log.d("minimumAge","minimum age is:" + minimumAge);
+                if( minimumAge < filterAgeRange) { // user's age range is less than the workout's minimum age
                     return false;
                 }
             } else {
@@ -326,15 +332,16 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         List<String> participants = (List<String>) workout.get("Participants");
         String creatorId = (String) workout.get("creatorId");
 
-
         if (userId.equals(creatorId)) {
             Toast.makeText(this, "You cannot join your own workout.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        getUsername(userId, new UsernameCallback() {
-            @Override
-            public void onCallback(String fullName) {
+        // Use getDocument directly without listener to prevent double updates
+        DocumentReference userRef = fStore.collection("users").document(userId);
+        userRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                String fullName = getFullName(documentSnapshot); // Custom method to get the full name
                 if (participants.contains(fullName)) {
                     Toast.makeText(HomePage.this, "You have already joined this workout.", Toast.LENGTH_SHORT).show();
                     return;
@@ -344,23 +351,31 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
 
                 fStore.collection("workouts").document(workoutId)
                         .update("Participants", FieldValue.arrayUnion(fullName), "ParticipantsAmount", FieldValue.increment(1))
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    Toast.makeText(HomePage.this, "You have joined the workout.", Toast.LENGTH_SHORT).show();
-                                    loadWorkouts();
-                                    Intent intent = new Intent(HomePage.this, HomePage.class);
-                                    startActivity(intent);
-                                } else {
-                                    Toast.makeText(HomePage.this, "Failed to join the workout.", Toast.LENGTH_SHORT).show();
-                                }
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                // Update the user's document to increment WorkoutParticipated field
+                                userRef.update("workoutJoined", FieldValue.increment(1)) // increment directly
+                                        .addOnCompleteListener(task1 -> {
+                                            if (task1.isSuccessful()) {
+                                                Toast.makeText(HomePage.this, "You have joined the workout.", Toast.LENGTH_SHORT).show();
+                                                Intent intent = new Intent(HomePage.this, HomePage.class);
+                                                startActivity(intent);
+                                            } else {
+                                                Toast.makeText(HomePage.this, "Failed to update participation count.", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+
+                                // Reload the workouts to reflect the changes
+                                loadWorkouts();
+                            } else {
+                                Toast.makeText(HomePage.this, "Failed to join the workout.", Toast.LENGTH_SHORT).show();
                             }
                         });
             }
+        }).addOnFailureListener(e -> {
+            Toast.makeText(HomePage.this, "Failed to retrieve user data.", Toast.LENGTH_SHORT).show();
         });
     }
-
 
 
     private void showSendFriendRequestPopup(String participant) {
@@ -484,8 +499,13 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         Spinner genderSpinner = dialogView.findViewById(R.id.genderSpinner);
 
         // Set up gender spinner
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.gender_array, android.R.layout.simple_spinner_item);
+        String[] genderArray = new String[0];
+        if ("Male".equalsIgnoreCase(userGender)) {
+            genderArray = new String[]{"Any", "Male Only"};
+        } else if("Female".equalsIgnoreCase(userGender)) {
+            genderArray = new String[]{"Any", "Female Only"};
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, genderArray);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(adapter);
 
@@ -547,21 +567,90 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
 
     public void getUsername(String id, final UsernameCallback callback) {
         DocumentReference documentReference = fStore.collection("users").document(id);
-        documentReference.addSnapshotListener(this, new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException error) {
-                if (documentSnapshot != null && documentSnapshot.exists()) {
-                    String username = documentSnapshot.getString("username");
-                    String firstName = documentSnapshot.getString("firstName");
-                    String lastName = documentSnapshot.getString("lastName");
-                    String fullName = firstName + " " + lastName + " (" + username + ")";
-                    participated = documentSnapshot.getLong("WorkoutParticipated");
-                    callback.onCallback(fullName);
-                } else {
-                    callback.onCallback(""); // Handle the case where the document does not exist or an error occurred
-                }
+        documentReference.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot != null && documentSnapshot.exists()) {
+                String fullName = getFullName(documentSnapshot); // Use helper method
+                participated = documentSnapshot.getLong("workoutJoined");
+                participated = (long) + 1;
+                Log.d("participated:", "participated: " + participated);
+                callback.onCallback(fullName);
+            } else {
+                callback.onCallback(""); // Handle the case where the document does not exist
             }
+        }).addOnFailureListener(e -> {
+            callback.onCallback(""); // Handle the error
         });
     }
+
+    private String getFullName(DocumentSnapshot documentSnapshot) {
+        String username = documentSnapshot.getString("username");
+        String firstName = documentSnapshot.getString("firstName");
+        String lastName = documentSnapshot.getString("lastName");
+        return firstName + " " + lastName + " (" + username + ")";
+    }
+
+    private void fetchUserGenderAndBirthdate(final GenderFetchCallback callback) {
+        String userId = currentUser.getUid();
+        DocumentReference userRef = fStore.collection("users").document(userId);
+        userRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                userGender = documentSnapshot.getString("gender");
+                Log.d("userGender:", "userGender: " + userGender);
+                birthdate = documentSnapshot.getString("birthdate");
+
+                String[] dateArray = birthdate.split("/"); // calculate user age from his birthdate
+                int year = Integer.parseInt(dateArray[2]);
+                int month = Integer.parseInt(dateArray[1]) - 1;
+                int day = Integer.parseInt(dateArray[0]);
+
+                userAge = calculateAge(year, month, day);
+
+                // Call the callback after fetching the gender and age
+                callback.onGenderFetched();
+            }
+        }).addOnFailureListener(e -> {
+            Log.e("HomePage", "Failed to fetch user gender", e);
+        });
+    }
+
+    public interface GenderFetchCallback {
+        void onGenderFetched();
+    }
+
+
+
+    private boolean IsWorkoutQualified(Map<String, Object> workout, String userGender) { // check if user stands in the creator filters
+        // Apply the filters to each workout and return true if the workout matches the filters
+        int index;
+        String WorkoutGender ="";
+        if(workout.get("GenderFilter") != null) {
+            Log.d("workout.get(GenderFilter)", "workout.get(GenderFilter): " + workout.get("GenderFilter"));
+            String WorkoutGenderfullParse = (String) workout.get("GenderFilter");
+            if(!Objects.equals(WorkoutGenderfullParse, "All")){
+             index = WorkoutGenderfullParse.indexOf(' ');
+             WorkoutGender = WorkoutGenderfullParse.substring(0, index); // remove the word only after the gender.
+            }
+            Log.d("workout.get(GenderFilter)", "ALL is good " + WorkoutGender);
+            if (!userGender.equals(WorkoutGender)) { // gender doesn't match
+                    if (!workout.get("GenderFilter").equals("All")) {
+                        return false;
+                    }
+                } //handle gender filter that the creator set.
+        }
+         if (workout.get("AgeFilter") != null) {
+            int minimumAge = ((Long) workout.get("AgeFilter")).intValue(); // Firestore returns numbers as Long
+            if(userAge < minimumAge) { // user's age range is less than the workout's minimum age
+                return false;
+            }
+        }
+
+        return true;
+    }
+    private int calculateAge(int year, int month, int day) {
+        LocalDate birthDate = LocalDate.of(year, month, day);
+        LocalDate currentDate = LocalDate.now();
+        return Period.between(birthDate, currentDate).getYears();
+    }
+
 
 }
