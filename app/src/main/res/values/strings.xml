@@ -4,7 +4,7 @@
     <string name="button_1">Button 1</string>
     <string name="button_2">Button 2</string>
     <string name="button_3">Button 3</string>
-    <string name="daily_streak_5_ud83d_udd25">Daily Streak:5 🔥</string>
+    <string name="dailyEmoji">Daily Streak: 🔥</string>
     <string name="birthdate">BIRTHDATE</string>
     <string name="join">Join</string>
     <string name="confirm_password">Confirm Password</string>

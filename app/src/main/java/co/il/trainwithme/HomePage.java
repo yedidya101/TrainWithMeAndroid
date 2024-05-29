@@ -39,19 +39,23 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class HomePage extends AppCompatActivity implements View.OnClickListener {
     ImageButton addWorkoutButton;
     ImageButton personalAreaButton;
     ImageButton ScoreBoardButton;
     ImageButton homeButton, logoutButton;
-    TextView emailNotVerifiedText;
+    TextView emailNotVerifiedText, dailyStreak;
     Button verifyNowButton;
     Button filterButton;
 
@@ -67,6 +71,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     private HashMap <Double, String> location;
     private Long participated;
     private Boolean isFriend = false;
+    private long loginStreak = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +86,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         verifyNowButton = findViewById(R.id.verifyNowButton);
         filterButton = findViewById(R.id.filterButton);
         logoutButton = findViewById(R.id.logoutbutton);
+        dailyStreak = findViewById(R.id.DailyStreak);
 
         addWorkoutButton.setOnClickListener(this);
         personalAreaButton.setOnClickListener(this);
@@ -96,10 +102,14 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         fStore = FirebaseFirestore.getInstance();
         currentUser = fAuth.getCurrentUser();
 
+        checkAndUpdateLoginStreak();
+
         // Initialize filters
         filterGender = "Any";
         filterAgeOn = false;
         filterAgeRange = 0;
+
+
 
         // Check if email is verified
         if (currentUser != null && !currentUser.isEmailVerified()) {
@@ -533,7 +543,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         // Load current filter settings
         ageFilterSwitch.setChecked(filterAgeOn);
         ageRangeSeekBar.setProgress(filterAgeRange);
-        ageRangeTextView.setText("Age range: " + filterAgeRange + "+");
+        ageRangeTextView.setText("Above age: " + filterAgeRange + "+");
         genderSpinner.setSelection(adapter.getPosition(filterGender));
 
         // Set the initial enabled state of the SeekBar based on the Switch
@@ -724,6 +734,64 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             }
         }
         return Filters;
+    }
+
+    private void checkAndUpdateLoginStreak() {
+        String userId = currentUser.getUid();
+        DocumentReference userDocRef = fStore.collection("users").document(userId);
+
+        userDocRef.get().addOnSuccessListener(documentSnapshot -> {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            String currentDateStr = sdf.format(new Date());
+
+            if (documentSnapshot.exists()) {
+                String lastLoginDateStr = documentSnapshot.getString("lastLoginDate");
+
+                if (lastLoginDateStr != null) {
+                    try {
+                        Date lastLoginDate = sdf.parse(lastLoginDateStr);
+                        Date currentDate = sdf.parse(currentDateStr);
+
+                        long diffInMillies = Math.abs(currentDate.getTime() - lastLoginDate.getTime());
+                        long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+
+                        if (diffInDays == 1) {
+                            // User logged in consecutively, increment the streak
+                            loginStreak = documentSnapshot.getLong("loginStreak") + 1;
+                        } else if (diffInDays > 1) {
+                            // User missed a day, reset the streak
+                            loginStreak = 1;
+                        } else {
+                            // User logged in again on the same day, keep the streak unchanged
+                            loginStreak = documentSnapshot.getLong("loginStreak");
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // Update the last login date and login streak in the database
+                userDocRef.update("lastLoginDate", currentDateStr, "loginStreak", loginStreak)
+                        .addOnSuccessListener(aVoid -> Log.d("HomePage", "Login streak updated successfully"))
+                        .addOnFailureListener(e -> Log.e("HomePage", "Failed to update login streak", e));
+
+            } else {
+                // If the document does not exist, create the fields
+                Map<String, Object> data = new HashMap<>();
+                data.put("lastLoginDate", currentDateStr);
+                data.put("loginStreak", loginStreak);
+
+                userDocRef.set(data)
+                        .addOnSuccessListener(aVoid -> Log.d("HomePage", "Login streak initialized successfully"))
+                        .addOnFailureListener(e -> Log.e("HomePage", "Failed to initialize login streak", e));
+            }
+            if(loginStreak == 1) {
+                dailyStreak.setText("Daily Login Streak: " + loginStreak);
+            }
+            else
+                dailyStreak.setText("Daily Login Streak: " + loginStreak + "\uD83D\uDD25 "  );
+        }).addOnFailureListener(e -> Log.e("HomePage", "Failed to fetch user data", e));
     }
 
 }

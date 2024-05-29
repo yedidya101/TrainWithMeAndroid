@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -128,18 +129,14 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                         gender_personal.setText(gender);
                         workoutsCreated.setText(String.valueOf(workoutcreated));
                         workoutsJoined.setText(String.valueOf(workoutjoined));
+
+                        loadUserWorkouts(); // load workouts only after user data is available. in order to get username first name and last name
                     }
                 }
             });
 
             loadFriends();
-            loadUserWorkouts(new WorkoutsLoadedCallback() {
 
-                @Override
-                public void onWorkoutsLoaded() {
-                    //make sure the joined workout loaded because the data base searching is taking time
-                }
-            });
         } else {
             Intent loginintent = new Intent(PersonalArea.this, MainActivity.class);
             startActivity(loginintent);
@@ -512,27 +509,25 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         return firstName + " " + lastName + " (" + pUsername + ")";
     }
 
-    private void loadUserWorkouts(WorkoutsLoadedCallback callback) {
-        loadJoinedWorkouts(callback);
+    private void loadUserWorkouts() {
+        loadJoinedWorkouts();
         loadCreatedWorkouts();
     }
-    public interface WorkoutsLoadedCallback {
-        void onWorkoutsLoaded();
-    }
 
 
 
-    private void loadJoinedWorkouts(WorkoutsLoadedCallback callback) {
+
+    private void loadJoinedWorkouts() {
         String myName = getFullName();
         CollectionReference workoutsRef = fstore.collection("workouts");
         workoutsRef.get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    callback.onWorkoutsLoaded();
                     LinearLayout joinedWorkoutsContainer = findViewById(R.id.joinedWorkoutsContainer);
                     joinedWorkoutsContainer.removeAllViews();
                     for (DocumentSnapshot document : queryDocumentSnapshots) {
                         List<String> participants = (List<String>) document.get("Participants");
                         if (participants != null && participants.contains(myName)) {
+                            Log.d("document", "another joined workout:");
                             Map<String, Object> workout = document.getData();
                             createPersonalWorkoutButton(joinedWorkoutsContainer, workout, false);
                         }
@@ -548,7 +543,6 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     LinearLayout createdWorkoutsContainer = findViewById(R.id.createdWorkoutsContainer);
                     createdWorkoutsContainer.removeAllViews();
-
                     for (DocumentSnapshot document : queryDocumentSnapshots) {
                         if(document.getString("CreatorID").equals(creator)) {
                             Map<String, Object> workout = document.getData();
@@ -635,12 +629,7 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                                 .addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
                                         Toast.makeText(this, "You have left the workout.", Toast.LENGTH_SHORT).show();
-                                        loadUserWorkouts(new WorkoutsLoadedCallback() {
-                                            @Override
-                                            public void onWorkoutsLoaded() {
-                                                //make sure the workout is joined have time to load
-                                            }
-                                        });
+                                        loadUserWorkouts();
                                     } else {
                                         Toast.makeText(this, "Failed to update participation count.", Toast.LENGTH_SHORT).show();
                                     }
@@ -657,12 +646,7 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Workout deleted successfully.", Toast.LENGTH_SHORT).show();
-                    loadUserWorkouts(new WorkoutsLoadedCallback() {
-                        @Override
-                        public void onWorkoutsLoaded() {
-                            //make sure the workout is joined have time to load
-                        }
-                    });
+                    loadUserWorkouts();
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Failed to delete the workout.", Toast.LENGTH_SHORT).show();
