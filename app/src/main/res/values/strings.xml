@@ -20,5 +20,8 @@
         <item>Male Only</item>
         <item>Female Only</item>
     </string-array>
+    <string name="remove">Remove</string>
+    <string name="confirm_remove_title">Remove Friend</string>
+    <string name="confirm_remove_message">Are you sure you want to remove this friend?</string>
 
 </resources>

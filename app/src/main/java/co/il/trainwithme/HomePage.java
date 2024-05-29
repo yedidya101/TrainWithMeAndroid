@@ -188,7 +188,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         ImageView workoutImage = workoutButton.findViewById(R.id.workoutImage);
         TextView workoutfilters = workoutButton.findViewById(R.id.workoutFilters);
 
-        String Filters = getworkoutfilters(workout);
+        String Filters = getWorkoutFilters(workout);
         if (!Filters.equals("")) {
             workoutfilters.setText(Filters);
         }
@@ -240,7 +240,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         Button joinButton = dialogView.findViewById(R.id.joinButton);
         LinearLayout participantsList = dialogView.findViewById(R.id.participantsList);
 
-        String Filters = getworkoutfilters(workout);
+        String Filters = getWorkoutFilters(workout);
         if (!Filters.equals("")) {
             filtersPopup.setText(Filters);
         }
@@ -708,7 +708,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         LocalDate currentDate = LocalDate.now();
         return Period.between(birthDate, currentDate).getYears();
     }
-    private String getworkoutfilters(Map<String, Object> workout) {
+    private String getWorkoutFilters(Map<String, Object> workout) {
         String Filters = "";
         boolean Privateworkout = (boolean) workout.get("Private");
         int minimumage = ((Long) workout.get("AgeFilter")).intValue();
