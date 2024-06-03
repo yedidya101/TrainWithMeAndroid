@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -22,6 +23,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ScoreBoard extends AppCompatActivity implements View.OnClickListener {
 
@@ -56,6 +59,7 @@ public class ScoreBoard extends AppCompatActivity implements View.OnClickListene
 
         // Fetch users from Firestore
         getUsersFromFirestore();
+        scheduleMonthlyReset();
     }
 
     private void setMonthText() {
@@ -97,13 +101,14 @@ public class ScoreBoard extends AppCompatActivity implements View.OnClickListene
     private void populateScoreboard(List<HashMap<String, Object>> userList) {
         llUsersList.removeAllViews();
 
-        for (int i = 0; i < userList.size(); i++) {
+        for (int i = 0; i < Math.min(userList.size(), 10); i++) {
             HashMap<String, Object> user = userList.get(i);
             View userView = getLayoutInflater().inflate(R.layout.user_item, null);
 
             TextView tvPlace = userView.findViewById(R.id.tvPlace);
             TextView tvUserName = userView.findViewById(R.id.tvUserName);
             TextView tvWorkouts = userView.findViewById(R.id.tvWorkouts);
+            TextView topTraineeBadge = userView.findViewById(R.id.topTraineeBadge);
 
             tvPlace.setText(String.valueOf(i + 1));
             String firstName = (String) user.getOrDefault("firstName", "");
@@ -112,8 +117,66 @@ public class ScoreBoard extends AppCompatActivity implements View.OnClickListene
             int workoutJoined = ((Long) user.getOrDefault("workoutJoined", 0L)).intValue();
             tvWorkouts.setText(String.valueOf(workoutJoined));
 
+            // Show the badge for the top user
+            if (i == 0) {
+                topTraineeBadge.setVisibility(View.VISIBLE);
+            } else {
+                topTraineeBadge.setVisibility(View.GONE);
+            }
+
             llUsersList.addView(userView);
         }
+    }
+
+    private void scheduleMonthlyReset() {
+        Timer timer = new Timer();
+        TimerTask resetTask = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(() -> {
+                    // Get the current top user and update their profile with "lastMonthTopTrainee"
+                    db.collection("users")
+                            .orderBy("workoutJoined", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                            .limit(1)
+                            .get()
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                                    DocumentReference topUserRef = task.getResult().getDocuments().get(0).getReference();
+                                    topUserRef.update("lastMonthTopTrainee", true);
+                                } else {
+                                    Log.e("Firestore", "Error finding top user", task.getException());
+                                }
+                            });
+
+                    // Reset the "workoutJoined" field for all users
+                    db.collection("users")
+                            .get()
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                        DocumentReference userRef = document.getReference();
+                                        userRef.update("workoutJoined", 0);
+                                    }
+                                } else {
+                                    Log.e("Firestore", "Error resetting users data", task.getException());
+                                }
+                            });
+
+                    // Refresh the scoreboard
+                    getUsersFromFirestore();
+                });
+            }
+        };
+
+        // Schedule the task to run at the end of each month
+        timer.schedule(resetTask, getEndOfMonthTime(), 30L * 24 * 60 * 60 * 1000); // every month
+    }
+
+    private Date getEndOfMonthTime() {
+        // Get the date for the end of the current month
+        Date now = new Date();
+        Date endOfMonth = new Date(now.getYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        return endOfMonth;
     }
 
     @Override

@@ -1,8 +1,11 @@
 package co.il.trainwithme;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,7 +23,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,6 +33,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -42,6 +48,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -72,7 +81,8 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     private Long participated;
     private Boolean isFriend = false;
     private long loginStreak = 1;
-
+    private FusedLocationProviderClient fusedLocationClient;
+    private double userLatitude, userLongitude;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,6 +112,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         fStore = FirebaseFirestore.getInstance();
         currentUser = fAuth.getCurrentUser();
 
+        //getUserLocation();
         checkAndUpdateLoginStreak();
 
         // Initialize filters
@@ -121,7 +132,8 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         }
 
         // Load workouts from Firestore
-        fetchUserGenderAndBirthdate(new GenderFetchCallback() {
+        fetchUserGenderAndBirthdate(new GenderFetchCallback() { // only after user gender and birthdate is fetched
+            // load workouts because need to show only the available workouts
             @Override
             public void onGenderFetched() {
                 loadWorkouts();
@@ -138,6 +150,8 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                             LinearLayout workoutListContainer = findViewById(R.id.workout_list_container);
                             workoutListContainer.removeAllViews();
 
+                            List<Map<String, Object>> workouts = new ArrayList<>();
+
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Map<String, Object> workout = document.getData();
 
@@ -147,12 +161,18 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                                     public void onResult(boolean isQualified) {
                                         if (isQualified) { //the user is qualified by the creator filters
                                             if (applyFiltersToWorkout(workout)) { // check if the user put filter to show the workouts he want
-                                                runOnUiThread(() -> createWorkoutButton(workoutListContainer, workout));
+                                                workouts.add(workout);
+
                                             }
                                         }
                                     }
                                 });
                             }
+                            sortWorkoutsByDistance(workouts);
+                            for (Map<String, Object> workout : workouts) {
+                                runOnUiThread(() -> createWorkoutButton(workoutListContainer, workout));
+                            }
+
                         } else {
                             Toast.makeText(HomePage.this, "Failed to load workouts.", Toast.LENGTH_SHORT).show();
                         }
@@ -595,7 +615,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     public interface UsernameCallback {
         void onCallback(String username);
     }
-
+// from here no documentation
     public void getUsername(String id, final UsernameCallback callback) {
         DocumentReference documentReference = fStore.collection("users").document(id);
         documentReference.get().addOnSuccessListener(documentSnapshot -> {
@@ -792,6 +812,56 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             else
                 dailyStreak.setText("Daily Login Streak: " + loginStreak + "\uD83D\uDD25 "  );
         }).addOnFailureListener(e -> Log.e("HomePage", "Failed to fetch user data", e));
+    }
+
+
+    private void getUserLocation() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            return;
+        }
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            userLatitude = (double) location.getLatitude();
+                            userLongitude = (double) location.getLongitude();
+                            loadWorkouts();
+                        }
+                    }
+                });
+    }
+
+    private double calculateDistance( double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Radius of the earth in km
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+    }
+
+    private void sortWorkoutsByDistance(List<Map<String, Object>> workouts) {
+        for (Map<String, Object> workout : workouts) {
+            Map<String, Object> workoutLocation = (Map<String, Object>) workout.get("Location");
+            double workoutLatitude = (double) workoutLocation.get("latitude");
+            double workoutLongitude = (double) workoutLocation.get("longitude");
+            double distance = calculateDistance(userLatitude, userLongitude, workoutLatitude, workoutLongitude);
+            workout.put("distance", distance);
+        }
+
+        Collections.sort(workouts, new Comparator<Map<String, Object>>() {
+            @Override
+            public int compare(Map<String, Object> w1, Map<String, Object> w2) {
+                double distance1 = (double) w1.get("distance");
+                double distance2 = (double) w2.get("distance");
+                return Double.compare(distance1, distance2);
+            }
+        });
+        Collections.reverse(workouts);
     }
 
 }
