@@ -87,7 +87,7 @@
             android:layout_width="310sp"
             android:layout_height="65sp"
             android:layout_gravity="center"
-            android:layout_marginBottom="20sp"
+
             android:hint="Password"
             app:passwordToggleEnabled="true">
 
@@ -99,6 +99,17 @@
                 android:background="@android:drawable/editbox_background_normal"
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:paddingStart="40dp"
+            android:gravity="center"
+            android:text="Password must contain 6 characters or more."
+            android:textColor="@color/white"
+            android:textSize="14sp"
+             />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/confirmPasswordLayout"

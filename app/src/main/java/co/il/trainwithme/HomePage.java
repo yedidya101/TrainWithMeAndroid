@@ -577,7 +577,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         ageRangeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                ageRangeTextView.setText("Age range: " + progress + "+");
+                ageRangeTextView.setText("Above age: " + progress + "+");
                 filterAgeRange = progress; // Correctly set filterAgeRange here
             }
 
