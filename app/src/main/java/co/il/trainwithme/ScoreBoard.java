@@ -154,7 +154,7 @@ public class ScoreBoard extends AppCompatActivity implements View.OnClickListene
                             .addOnCompleteListener(task -> {
                                 if (task.isSuccessful()) {
                                     for (QueryDocumentSnapshot document : task.getResult()) {
-                                        DocumentReference userRef = document.getReference();
+                                       DocumentReference userRef = document.getReference();
                                         userRef.update("workoutJoined", 0);
                                     }
                                 } else {

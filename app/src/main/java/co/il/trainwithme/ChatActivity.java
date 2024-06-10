@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -193,6 +194,12 @@ public class ChatActivity extends AppCompatActivity {
             holder.messageTextView.setText(chatMessage.getSenderUsername() + ": " + chatMessage.getMessage());
             holder.dateTextView.setText(dateFormat.format(chatMessage.getTimestamp().toDate()));
             holder.timeTextView.setText(timeFormat.format(chatMessage.getTimestamp().toDate()));
+
+            if (chatMessage.getSenderId().equals(fAuth.getCurrentUser().getUid())) {
+                holder.messageContainer.setBackgroundResource(R.drawable.message_background_sent);
+            } else {
+                holder.messageContainer.setBackgroundResource(R.drawable.message_background_received);
+            }
         }
 
         @Override
@@ -209,12 +216,14 @@ public class ChatActivity extends AppCompatActivity {
             TextView messageTextView;
             TextView dateTextView;
             TextView timeTextView;
+            LinearLayout messageContainer;
 
             public ChatViewHolder(@NonNull View itemView) {
                 super(itemView);
                 messageTextView = itemView.findViewById(R.id.messageTextView);
                 dateTextView = itemView.findViewById(R.id.dateTextView);
                 timeTextView = itemView.findViewById(R.id.timeTextView);
+                messageContainer = itemView.findViewById(R.id.messageContainer);
             }
         }
     }

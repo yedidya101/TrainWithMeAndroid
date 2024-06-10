@@ -47,8 +47,11 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -302,12 +305,13 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                         gender = documentSnapshot.getString("gender");
                         Log.d("Document", "gender: " + gender);
                         Long participated = documentSnapshot.getLong("WorkoutParticipated");
-                        Long created = documentSnapshot.getLong("WorkoutCreated");
+                        Long created = documentSnapshot.getLong("workoutCreated");
 
                         if (participated != null) {
                             workoutParticipated = participated.intValue();
                         } else {
                             workoutParticipated = 0; // Default value if not available
+                            //Toast.makeText(addWorkout.this, "blo blo", Toast.LENGTH_SHORT).show();
                         }
 
                         if (created != null) {
@@ -338,6 +342,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
     }
 
     private void saveWorkoutToFirestore() {
+        selectedDate.add(selectedDate.DAY_OF_MONTH, 1);
         if(WorkoutType == null){
             Toast.makeText(addWorkout.this, "Please select a workout type", Toast.LENGTH_SHORT).show();
             return;
@@ -369,14 +374,43 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
             return;
         }
 
-        else if (selectedDate != null && selectedDate.before(Calendar.getInstance())) {
-            if(selectedDate.equals(Calendar.getInstance())){ // check if the chosen date is today
 
-            }
-            Toast.makeText(this, "Workout cannot be in the past.", Toast.LENGTH_SHORT).show();
+        else if (selectedDate != null && selectedDate.before(Calendar.getInstance())) { 
+
+            Toast.makeText(this, "Workout cannot be in the past. (date)", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        else if (selectedDate.equals(Calendar.getInstance())) { // Check if the chosen date is today
+            try {
+                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                Date workoutTimeDate = timeFormat.parse(workoutTime);
+                Calendar workoutTimeCalendar = Calendar.getInstance();
+                assert workoutTimeDate != null;
+                workoutTimeCalendar.setTime(workoutTimeDate);
+                Toast.makeText(this, "Workout time: " + workoutTime, Toast.LENGTH_SHORT).show();
+
+                Calendar now = Calendar.getInstance();
+                Calendar currentTimeCalendar = Calendar.getInstance();
+                currentTimeCalendar.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
+                currentTimeCalendar.set(Calendar.MINUTE, now.get(Calendar.MINUTE));
+                currentTimeCalendar.set(Calendar.SECOND, 0);
+                currentTimeCalendar.set(Calendar.MILLISECOND, 0);
+                Toast.makeText(this, "Current time: " + now.getTime().toString(), Toast.LENGTH_SHORT).show();
+
+                if (workoutTimeCalendar.before(currentTimeCalendar)) {
+                    Toast.makeText(this, "Workout cannot be in the past.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Invalid workout time format.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        selectedDate.add(selectedDate.DAY_OF_MONTH, -1);
+
+        Toast.makeText(addWorkout.this, workoutTime, Toast.LENGTH_SHORT).show();
 
         List<String> participantsList = new ArrayList<>();
         participantsList.add(FullName);
@@ -427,8 +461,8 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
     private void updateWorkoutCreatedCount() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference docRef = db.collection("users").document(userID);
-        workoutCreated += 1;
-        docRef.update("WorkoutCreated", workoutCreated).addOnSuccessListener(new OnSuccessListener<Void>() {
+        workoutCreated = workoutCreated + 1;
+        docRef.update("workoutCreated", workoutCreated).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 Log.d("Document", "WorkoutCreated updated successfully");
@@ -463,9 +497,11 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
         timePickerDialog = new TimePickerDialog(addWorkout.this,
-                (view, hourOfDay, minuteOfHour) -> workoutTime = hourOfDay + ":" + minuteOfHour, hour, minute, true);
+                (view, hourOfDay, minuteOfHour) -> workoutTime = String.format("%02d:%02d", hourOfDay, minuteOfHour),
+                hour, minute, true);
         timePickerDialog.show();
     }
+
 
     private void showDurationPicker() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

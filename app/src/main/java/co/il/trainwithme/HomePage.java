@@ -45,6 +45,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
@@ -142,6 +143,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     }
 
     private void loadWorkouts() { // Load workouts from Firestore
+        deleteOldWorkouts();
         fStore.collection("workouts").get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -862,6 +864,37 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             }
         });
         Collections.reverse(workouts);
+    }
+
+    private void deleteOldWorkouts() {
+        // Fetch all workouts from the database
+        CollectionReference workoutsRef = fStore.collection("workouts");
+        workoutsRef.get().addOnSuccessListener(queryDocumentSnapshots -> {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            Date currentDate = new Date();
+            String currentDateStr = sdf.format(currentDate);
+
+            for (DocumentSnapshot document : queryDocumentSnapshots) {
+                Map<String, Object> workout = document.getData();
+                String workoutDateStr = (String) workout.get("Date");
+
+                if (workoutDateStr != null) {
+                    try {
+                        Date workoutDate = sdf.parse(workoutDateStr);
+                        long diffInMillies = currentDate.getTime() - workoutDate.getTime();
+                        long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+
+                        if (diffInDays > 0) { // If the workout is older than today
+                            workoutsRef.document(document.getId()).delete()
+                                    .addOnSuccessListener(aVoid -> Log.d("DeleteOldWorkouts", "Workout deleted successfully"))
+                                    .addOnFailureListener(e -> Log.e("DeleteOldWorkouts", "Failed to delete workout", e));
+                        }
+                    } catch (ParseException e) {
+                        Log.e("DeleteOldWorkouts", "Failed to parse workout date", e);
+                    }
+                }
+            }
+        }).addOnFailureListener(e -> Log.e("DeleteOldWorkouts", "Failed to fetch workouts", e));
     }
 
 }
