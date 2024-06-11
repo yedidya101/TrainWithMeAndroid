@@ -379,7 +379,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
 
         else if (selectedDate != null && selectedDate.before(Calendar.getInstance())) { 
 
-            Toast.makeText(this, "Workout cannot be in the past. (date)", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Workout cannot be in the past.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -397,10 +397,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
             workoutDate.set(Calendar.SECOND, 0);
             workoutDate.set(Calendar.MILLISECOND, 0);
 
-            if (workoutDate.before(currentDate)) {
-                Toast.makeText(this, "Workout cannot be in the past. (date)", Toast.LENGTH_SHORT).show();
-                return;
-            } else if (workoutDate.equals(currentDate)) {
+             if (selectedDate.equals(currentDate)) {
                 Toast.makeText(this, "Workout is scheduled for today.", Toast.LENGTH_SHORT).show();
                 try {
                     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());

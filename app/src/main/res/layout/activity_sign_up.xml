@@ -104,9 +104,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="left"
-            android:paddingStart="40dp"
+            android:paddingStart="20dp"
             android:gravity="center"
-            android:text="Password must contain 6 characters or more."
+            android:text="Password must contain at least 6 characters, one uppercase, one lowercase and one number"
             android:textColor="@color/white"
             android:textSize="14sp"
              />

@@ -49,6 +49,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SignUplink.setOnClickListener(this);
 
         fAuth = FirebaseAuth.getInstance();
+
+        if (fAuth.getCurrentUser() != null) {
+            Intent loginIntent = new Intent(MainActivity.this, HomePage.class);
+            startActivity(loginIntent);
+            finish();
+        }
+
     }
 
     @Override

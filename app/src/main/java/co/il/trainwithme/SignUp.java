@@ -84,11 +84,6 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
 
         fAuth = FirebaseAuth.getInstance();
         fstore = FirebaseFirestore.getInstance();
-        /*if (fAuth.getCurrentUser() != null) {
-            Intent loginIntent = new Intent(SignUp.this, HomePage.class);
-            startActivity(loginIntent);
-            finish();
-        } */
     }
 
     @Override
@@ -136,8 +131,8 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
             return;
         }
 
-        if (password.length() < 6) {
-            Toast.makeText(this, "Password must contain >= 6 characters.", Toast.LENGTH_SHORT).show();
+        if (!PasswordRequirementChecking(password)) {
+            Toast.makeText(this, "The password you entered is too weak.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -271,5 +266,23 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
     }
     private String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+    private  boolean PasswordRequirementChecking(String password){
+        if (password.length() < 6) {
+            return false;
+        }
+        if (!password.matches(".*[A-Z].*")) // check if password has at least one uppercase character
+        {
+            return false;
+        }
+        if (!password.matches(".*[a-z].*"))// check if password has at least one lowercase character
+        {
+            return false;
+        }
+        if (!password.matches(".*[0-9].*"))// check if password has at least one digit
+        {
+            return false;
+        }
+        return true;
     }
 }
