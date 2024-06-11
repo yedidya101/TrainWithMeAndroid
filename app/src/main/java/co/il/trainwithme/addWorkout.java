@@ -84,6 +84,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
     private TimePickerDialog timePickerDialog;
     private View lastSelectedButton = null;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -343,6 +344,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
 
     private void saveWorkoutToFirestore() {
         selectedDate.add(selectedDate.DAY_OF_MONTH, 1);
+
         if(WorkoutType == null){
             Toast.makeText(addWorkout.this, "Please select a workout type", Toast.LENGTH_SHORT).show();
             return;
@@ -381,36 +383,53 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
             return;
         }
 
-        else if (selectedDate.equals(Calendar.getInstance())) { // Check if the chosen date is today
-            try {
-                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                Date workoutTimeDate = timeFormat.parse(workoutTime);
-                Calendar workoutTimeCalendar = Calendar.getInstance();
-                assert workoutTimeDate != null;
-                workoutTimeCalendar.setTime(workoutTimeDate);
-                Toast.makeText(this, "Workout time: " + workoutTime, Toast.LENGTH_SHORT).show();
+        else {
+            // Create instances of Calendar with time set to midnight for accurate date comparison
+            Calendar currentDate = Calendar.getInstance();
+            currentDate.set(Calendar.HOUR_OF_DAY, 0);
+            currentDate.set(Calendar.MINUTE, 0);
+            currentDate.set(Calendar.SECOND, 0);
+            currentDate.set(Calendar.MILLISECOND, 0);
 
-                Calendar now = Calendar.getInstance();
-                Calendar currentTimeCalendar = Calendar.getInstance();
-                currentTimeCalendar.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
-                currentTimeCalendar.set(Calendar.MINUTE, now.get(Calendar.MINUTE));
-                currentTimeCalendar.set(Calendar.SECOND, 0);
-                currentTimeCalendar.set(Calendar.MILLISECOND, 0);
-                Toast.makeText(this, "Current time: " + now.getTime().toString(), Toast.LENGTH_SHORT).show();
+            Calendar workoutDate = (Calendar) selectedDate.clone();
+            workoutDate.set(Calendar.HOUR_OF_DAY, 0);
+            workoutDate.set(Calendar.MINUTE, 0);
+            workoutDate.set(Calendar.SECOND, 0);
+            workoutDate.set(Calendar.MILLISECOND, 0);
 
-                if (workoutTimeCalendar.before(currentTimeCalendar)) {
-                    Toast.makeText(this, "Workout cannot be in the past.", Toast.LENGTH_SHORT).show();
+            if (workoutDate.before(currentDate)) {
+                Toast.makeText(this, "Workout cannot be in the past. (date)", Toast.LENGTH_SHORT).show();
+                return;
+            } else if (workoutDate.equals(currentDate)) {
+                Toast.makeText(this, "Workout is scheduled for today.", Toast.LENGTH_SHORT).show();
+                try {
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                    Date workoutTimeDate = timeFormat.parse(workoutTime);
+                    Calendar workoutTimeCalendar = Calendar.getInstance();
+                    assert workoutTimeDate != null;
+                    workoutTimeCalendar.setTime(workoutTimeDate);
+
+                    Calendar now = Calendar.getInstance();
+                    Calendar currentTimeCalendar = Calendar.getInstance();
+                    currentTimeCalendar.set(Calendar.HOUR_OF_DAY, now.get(Calendar.HOUR_OF_DAY));
+                    currentTimeCalendar.set(Calendar.MINUTE, now.get(Calendar.MINUTE));
+                    currentTimeCalendar.set(Calendar.SECOND, 0);
+                    currentTimeCalendar.set(Calendar.MILLISECOND, 0);
+
+                    if (workoutTimeCalendar.before(currentTimeCalendar)) {
+                        Toast.makeText(this, "Workout cannot be in the past.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, "Invalid workout time format.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-            } catch (ParseException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Invalid workout time format.", Toast.LENGTH_SHORT).show();
-                return;
             }
         }
+
         selectedDate.add(selectedDate.DAY_OF_MONTH, -1);
 
-        Toast.makeText(addWorkout.this, workoutTime, Toast.LENGTH_SHORT).show();
 
         List<String> participantsList = new ArrayList<>();
         participantsList.add(FullName);

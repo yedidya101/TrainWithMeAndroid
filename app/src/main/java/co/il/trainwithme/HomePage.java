@@ -522,7 +522,9 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             finish();
         } else if (v == logoutButton) {
             FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+            Intent intent = new Intent(HomePage.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
             finish();
         } else if (v == verifyNowButton) {
             currentUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
