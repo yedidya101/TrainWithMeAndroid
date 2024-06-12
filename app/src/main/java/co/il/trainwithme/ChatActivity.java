@@ -119,10 +119,6 @@ public class ChatActivity extends AppCompatActivity {
                         if (dc.getType() == DocumentChange.Type.ADDED) {
                             chatAdapter.addMessage(dc.getDocument().toObject(ChatMessage.class));
                             recyclerViewChat.smoothScrollToPosition(chatAdapter.getItemCount() - 1);
-                        } else if (dc.getType() == DocumentChange.Type.MODIFIED) {
-                            // Handle modifications if necessary
-                        } else if (dc.getType() == DocumentChange.Type.REMOVED) {
-                            // Handle removals if necessary
                         }
                     }
                 });
@@ -172,10 +168,9 @@ public class ChatActivity extends AppCompatActivity {
         public Timestamp getTimestamp() {
             return timestamp;
         }
+
     }
 
-    // Internal ChatAdapter class
-    // Internal ChatAdapter class
     private class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
         private List<ChatMessage> chatMessages = new ArrayList<>();
         private SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());

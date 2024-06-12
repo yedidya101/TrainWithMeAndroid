@@ -305,7 +305,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                         lastName = documentSnapshot.getString("lastName");
                         gender = documentSnapshot.getString("gender");
                         Log.d("Document", "gender: " + gender);
-                        Long participated = documentSnapshot.getLong("WorkoutParticipated");
+                        Long participated = documentSnapshot.getLong("workoutJoined");
                         Long created = documentSnapshot.getLong("workoutCreated");
 
                         if (participated != null) {
@@ -478,6 +478,8 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference docRef = db.collection("users").document(userID);
         workoutCreated = workoutCreated + 1;
+        workoutParticipated = workoutParticipated + 1;
+        docRef.update("workoutJoined", workoutParticipated);
         docRef.update("workoutCreated", workoutCreated).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {

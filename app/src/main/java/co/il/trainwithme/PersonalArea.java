@@ -78,9 +78,11 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
         pendingRequestsButton.setOnClickListener(this);
         sendFriendRequestButton.setOnClickListener(this);
 
+
         HomePageButton = findViewById(R.id.homepage2);
         ScoreBoardButton = findViewById(R.id.scoreboard2);
         addWorkoutButton = findViewById(R.id.createWorkout2);
+
 
         addWorkoutButton.setOnClickListener(this);
         HomePageButton.setOnClickListener(this);
@@ -163,6 +165,11 @@ public class PersonalArea extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(PersonalArea.this, addWorkout.class);
             startActivity(intent);
             finish();
+        }
+        else if (v == personalAreaButton) {
+            Intent intent = new Intent(PersonalArea.this, PersonalArea.class);
+            finish();
+            startActivity(intent);
         }
     }
 
