@@ -50,11 +50,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         fAuth = FirebaseAuth.getInstance();
 
-        /*if (fAuth.getCurrentUser() != null) {
+        if (fAuth.getCurrentUser() != null) { //check if user is already logged in if so, go to homepage
             Intent loginIntent = new Intent(MainActivity.this, HomePage.class);
             startActivity(loginIntent);
             finish();
-        } */
+        }
 
     }
 
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         if (password.length() < 6) {
-            Toast.makeText(this, "Password must be >= 6 characters.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Password must contain at least 6 characters.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (task.isSuccessful()) {
                     Toast.makeText(MainActivity.this, "Logged in successfully.", Toast.LENGTH_SHORT).show();
                     Intent loginIntent = new Intent(MainActivity.this, HomePage.class);
+                    loginIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(loginIntent);
                 } else {
                     Toast.makeText(MainActivity.this, "Login failed: "+ "Wrong Email or Password", Toast.LENGTH_SHORT).show();

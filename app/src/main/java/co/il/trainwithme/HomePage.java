@@ -114,7 +114,6 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
         fStore = FirebaseFirestore.getInstance();
         currentUser = fAuth.getCurrentUser();
 
-        getUserLocation();
         checkAndUpdateLoginStreak();
 
         // Initialize filters
@@ -139,6 +138,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             @Override
             public void onGenderFetched() {
                 loadWorkouts();
+                getUserLocation();
             }
         });
     }
@@ -171,7 +171,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                                     }
                                 });
                             }
-                            sortWorkoutsByDistance(workouts);
+                            sortWorkoutsByDistance(workouts); //sort the workout by distance from user location
                             for (Map<String, Object> workout : workouts) {
                                 runOnUiThread(() -> createWorkoutButton(workoutListContainer, workout));
                             }
@@ -194,7 +194,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             if (workout.get("AgeFilter") != null) {
                 int minimumAge = ((Long) workout.get("AgeFilter")).intValue(); // Firestore returns numbers as Long
                 Log.d("minimumAge","minimum age is:" + minimumAge);
-                if( minimumAge < filterAgeRange) { // user's age range is less than the workout's minimum age
+                if( minimumAge < filterAgeRange) { // user's minimal age is more than the workout's minimum age
                     return false;
                 }
             } else {
@@ -391,7 +391,6 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             return;
         }
 
-        // Use getDocument directly without listener to prevent double updates
         DocumentReference userRef = fStore.collection("users").document(userId);
         userRef.get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
@@ -441,7 +440,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
             @Override
             public void onClick(DialogInterface dialog, int id) {
                 String friendUsername = participant;
-                int istart2 = friendUsername.indexOf("(");
+                int istart2 = friendUsername.indexOf("("); //
                 int iend2= friendUsername.indexOf(")");
                 friendUsername = friendUsername.substring(istart2 + 1, iend2); // get only the username for sending friend request
                 Log.d("HomePage", "friendUsername: " + friendUsername);
@@ -620,7 +619,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
     public interface UsernameCallback {
         void onCallback(String username);
     }
-// from here no documentation
+
     public void getUsername(String id, final UsernameCallback callback) {
         DocumentReference documentReference = fStore.collection("users").document(id);
         documentReference.get().addOnSuccessListener(documentSnapshot -> {
@@ -631,10 +630,10 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                 Log.d("participated:", "participated: " + participated);
                 callback.onCallback(fullName);
             } else {
-                callback.onCallback(""); // Handle the case where the document does not exist
+                callback.onCallback("");
             }
         }).addOnFailureListener(e -> {
-            callback.onCallback(""); // Handle the error
+            callback.onCallback("");
         });
     }
 
@@ -689,18 +688,18 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                 index = WorkoutGenderfullParse.indexOf(' ');
                 WorkoutGender = WorkoutGenderfullParse.substring(0, index); // remove the word only after the gender.
             }
-            if (!userGender.equals(WorkoutGender)) { // gender doesn't match
-                if (!workout.get("GenderFilter").equals("All")) {
-                    callback.onResult(false);
-                    return;
+                if (!userGender.equals(WorkoutGender)) { // gender doesn't match
+                    if (!workout.get("GenderFilter").equals("All")) {
+                        callback.onResult(false);
+                        return;
+                    }
                 }
-            }
         }
 
         // Check age filter
         if (workout.get("AgeFilter") != null) {
             int minimumAge = ((Long) workout.get("AgeFilter")).intValue(); // Firestore returns numbers as Long
-            if (userAge < minimumAge) { // user's age range is less than the workout's minimum age
+            if (userAge < minimumAge) { // user's age is less than the workout's minimum age
                 callback.onResult(false);
                 return;
             }
@@ -722,7 +721,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                         }
                     }
                     callback.onResult(isFriend);
-                } else {
+                } else { // User document doesn't exist for some reason
                     callback.onResult(false);
                 }
             }).addOnFailureListener(e -> {
@@ -833,6 +832,7 @@ public class HomePage extends AppCompatActivity implements View.OnClickListener 
                         if (location != null) {
                             userLatitude = (double) location.getLatitude();
                             userLongitude = (double) location.getLongitude();
+
                             loadWorkouts();
                         }
                     }

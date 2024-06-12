@@ -34,11 +34,11 @@ public class ScoreBoard extends AppCompatActivity implements View.OnClickListene
     private TextView monthTextView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_score_board);
 
-        llUsersList = findViewById(R.id.llUsersList);
+        llUsersList = findViewById(R.id.llUsersList); //Linear layout of users
         personal3 = findViewById(R.id.personal3);
         createWorkout3 = findViewById(R.id.createWorkout3);
         scoreboard3 = findViewById(R.id.scoreboard3);
@@ -101,7 +101,7 @@ public class ScoreBoard extends AppCompatActivity implements View.OnClickListene
     private void populateScoreboard(List<HashMap<String, Object>> userList) {
         llUsersList.removeAllViews();
 
-        for (int i = 0; i < Math.min(userList.size(), 10); i++) {
+        for (int i = 0; i < Math.min(userList.size(), 10); i++) { // Only show top 10 users or less if there are less than 10
             HashMap<String, Object> user = userList.get(i);
             View userView = getLayoutInflater().inflate(R.layout.user_item, null);
 

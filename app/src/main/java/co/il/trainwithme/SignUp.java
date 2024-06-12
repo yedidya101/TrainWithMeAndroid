@@ -231,6 +231,7 @@ public class SignUp extends AppCompatActivity implements View.OnClickListener {
 
                     Toast.makeText(SignUp.this, "User Created.", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(SignUp.this, HomePage.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     finish();
                 } else {

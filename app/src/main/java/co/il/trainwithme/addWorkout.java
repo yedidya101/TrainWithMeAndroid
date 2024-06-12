@@ -177,7 +177,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         userID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         fetchUserDetails();
-        //getLastLocationAndInitializeMap();
+
     } catch (Exception e){
             Log.e("addWorkout", "Error in onCreate: " + e.getMessage());
 
@@ -228,7 +228,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
             }
         }
 
-        // Apply the semi-transparent overlay to the current button
+        // Apply the semi-transparent overlay to the chosen workout type
         if (id == R.id.btnRunning) {
             v.setBackgroundResource(R.drawable.semi_transparent_running);
             tvChosenWorkoutType.setText("Chosen Workout Type: Running");
@@ -272,9 +272,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
             @Override
             public void onClick(View v) {
                 if (selectedLocation != null) {
-                    // Handle the selected location (e.g., save it to the workout details)
                     Toast.makeText(addWorkout.this, "Location saved ", Toast.LENGTH_SHORT).show();
-                    // Dismiss the popup
                     popupWindow.dismiss();
                     cleanupMapFragment();
                 } else {
@@ -311,8 +309,7 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
                         if (participated != null) {
                             workoutParticipated = participated.intValue();
                         } else {
-                            workoutParticipated = 0; // Default value if not available
-                            //Toast.makeText(addWorkout.this, "blo blo", Toast.LENGTH_SHORT).show();
+                            workoutParticipated = 0; // this is the user first workout.
                         }
 
                         if (created != null) {
@@ -384,7 +381,6 @@ public class addWorkout extends AppCompatActivity implements View.OnClickListene
         }
 
         else {
-            // Create instances of Calendar with time set to midnight for accurate date comparison
             Calendar currentDate = Calendar.getInstance();
             currentDate.set(Calendar.HOUR_OF_DAY, 0);
             currentDate.set(Calendar.MINUTE, 0);
